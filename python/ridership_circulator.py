@@ -51,7 +51,7 @@ def insert_data(day, month, year, numofdays):
         for stop_data in ridership_data:
             if stop_data['RouteStopID'] == 0:
                 continue
-            #clean the route name
+            # clean the route name
             if 'purple' in stop_data['Route'].lower():
                 route = 'purple'
             elif 'green' in stop_data['Route'].lower():
@@ -63,13 +63,17 @@ def insert_data(day, month, year, numofdays):
             ridership[route][stop_data['VehicleID']][stop_data['RouteStopID']][0] += stop_data['Entries']
             ridership[route][stop_data['VehicleID']][stop_data['RouteStopID']][1] += stop_data['Exits']
 
-        entries = 0
-        exits = 0
         data = []
-        for route, x in ridership.items():
-            for vehicleid, y in x.items():
-                for stopid, z in y.items():
-                    data.append((start.strftime("%Y-%m-%d"), vehicleid, stopid, route, start.weekday(), z[0], z[1]))
+        for route, route_data in ridership.items():
+            for vehicleid, vehicle_data in route_data.items():
+                for stopid, stop_data in vehicle_data.items():
+                    data.append((start.strftime("%Y-%m-%d"),
+                                 vehicleid,
+                                 stopid,
+                                 route,
+                                 start.weekday(),
+                                 stop_data[0],
+                                 stop_data[1]))
 
         if not data:
             continue
