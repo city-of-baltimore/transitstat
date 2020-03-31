@@ -2,3 +2,6 @@ filelock
 pyodbc
 pytest
 tqdm
+requests
+pandas
+dateutil
