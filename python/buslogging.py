@@ -19,10 +19,12 @@ ROUTE_ID = {1: 'Banner',
 CONN = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_DATA;Trusted_Connection=yes;')
 CURSOR = CONN.cursor()
 
+
 def get_active_buses():
     """ Get the list of buses that were active the last time the script was run, and do no have an end time"""
     CURSOR.execute("SELECT busid, route FROM ccc_bus_runtimes WHERE endtime IS NULL")
-    return {busid.strip():route for (busid, route) in CURSOR.fetchall()}
+    return {busid.strip(): route for (busid, route) in CURSOR.fetchall()}
+
 
 def log_active_bus(bus_id, route_id):
     """
@@ -39,6 +41,7 @@ def log_active_bus(bus_id, route_id):
                    bus_id, ROUTE_ID[route_id])
     CURSOR.commit()
 
+
 def log_inactive_bus(bus_id):
     """
     Log a bus that was active, and is no longer active
@@ -49,6 +52,7 @@ def log_inactive_bus(bus_id):
     """
     CURSOR.execute("UPDATE ccc_bus_runtimes SET endtime = GETDATE() WHERE busid = (?) AND endtime IS NULL", bus_id)
     CURSOR.commit()
+
 
 def process_vehicles():
     """Log the bus status in the database"""
@@ -77,6 +81,7 @@ def process_vehicles():
     # Any buses left in this list were not active, and should be ended
     for bus_id in active_buses:
         log_inactive_bus(bus_id)
+
 
 if __name__ == '__main__':
     process_vehicles()

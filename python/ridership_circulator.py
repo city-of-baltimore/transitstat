@@ -9,7 +9,8 @@ import shuttle
 CONN = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_DATA;Trusted_Connection=yes;')
 CURSOR = CONN.cursor()
 
-def insert_data(day, month, year, numofdays):
+
+def insert_data(day, month, year, numofdays):  # pylint:disable=too-many-locals
     """
     Insert the ridership date from the Ridesystems API into our database.
 
@@ -24,18 +25,18 @@ def insert_data(day, month, year, numofdays):
     :return: None
     """
 
-    #CURSOR.execute("""
-    #CREATE TABLE [dbo].[ccc_aggregate_ridership](
-    #[RidershipDate] [date] NULL,
-    #[VehicleID] [int] NULL,
-    #[RouteStopID] [int] NULL,
-    #[Route] [nchar](30) NULL,
-    #[Weekday] [int] NULL,
-    #[Boardings] [int] NULL,
-    #[Alightings] [int] NULL
-    #);
-    #""")
-    #CURSOR.commit()
+    # CURSOR.execute("""
+    # CREATE TABLE [dbo].[ccc_aggregate_ridership](
+    # [RidershipDate] [date] NULL,
+    # [VehicleID] [int] NULL,
+    # [RouteStopID] [int] NULL,
+    # [Route] [nchar](30) NULL,
+    # [Weekday] [int] NULL,
+    # [Boardings] [int] NULL,
+    # [Alightings] [int] NULL
+    # );
+    # """)
+    # CURSOR.commit()
 
     for i in range(numofdays):
 
@@ -93,7 +94,8 @@ def insert_data(day, month, year, numofdays):
             Alightings = vals.Alightings
         WHEN NOT MATCHED THEN
             INSERT (RidershipDate, VehicleID, RouteStopID, Route, Weekday, Boardings, Alightings)
-            VALUES (vals.RidershipDate, vals.VehicleID, vals.RouteStopID, vals.Route, vals.Weekday, vals.Boardings, vals.Alightings);
+            VALUES (vals.RidershipDate, vals.VehicleID, vals.RouteStopID, vals.Route, vals.Weekday, vals.Boardings,
+            vals.Alightings);
         """, data)
 
         CURSOR.commit()
@@ -116,6 +118,7 @@ def start_from_cmdline():
 
     args = parser.parse_args()
     insert_data(args.day, args.month, args.year, args.numofdays)
+
 
 if __name__ == '__main__':
     start_from_cmdline()

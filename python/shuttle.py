@@ -1,4 +1,4 @@
-'''
+""""
 The Pitt API, to access workable data of the University of Pittsburgh
 Copyright (C) 2015 Ritwik Gupta
 This program is free software; you can redistribute it and/or modify
@@ -12,7 +12,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-'''
+"""
 from typing import Dict, Any
 import requests
 
@@ -21,12 +21,10 @@ SESS = requests.session()
 API_KEY = "8882812681"
 BASE_URL = "https://cityofbaltimore.ridesystems.net"
 
+
 def get_routes_for_map_with_schedule_with_encoded_line():
     """
     Used to retrieve active Routes from Ride Systems. Also contains a link to a schedule for each particular route
-
-    :param api_key: Key used to authorize the request
-    :type api_key: str
 
     :return RouteWithSchedule: List of dictionaries with the following information
         RouteID – Unique identifier for the route
@@ -80,14 +78,12 @@ def get_routes_for_map_with_schedule_with_encoded_line():
     """
     return _query('GetRoutesForMapWithScheduleWithEncodedLine')
 
+
 def get_map_vehicle_points() -> Dict[str, Any]:
     """
     Return the map location for all active vehicles.
 
-    :param api_key: Key used to authorize the request
-    :type api_key: str
-
-    :return vehicle: List of dictionaries containing the following information
+    :return vehicle: (list) List of dictionaries containing the following information
         VehicleID—Unique Identifier for a Vehicle
         RouteID – Unique Identifier for a Route
         Name – Name of the Vehicle
@@ -98,7 +94,6 @@ def get_map_vehicle_points() -> Dict[str, Any]:
         Seconds – Seconds since the vehicle reported its location
         IsOnRoute – Is the vehicle on Route?
         IsDelayed– Is the vehicle Delayed?
-    :type vehicle: list
     """
     return _query('GetMapVehiclePoints')
 
@@ -106,10 +101,8 @@ def get_map_vehicle_points() -> Dict[str, Any]:
 def get_vehicle_route_stop_estimates(vehicle_id: list, quantity: int = 2) -> Dict[str, Any]:
     """Return {quantity} stop estimates for all active vehicles.
 
-    :param vehicle_id: List of integers of Vehicle ID’s to retrieve
-    :type vehicle_id: List
-    :param quantity: Number of records to return.
-    :type quantity: int
+    :param vehicle_id: (list) List of integers of Vehicle ID’s to retrieve
+    :param quantity: (int) Number of records to return.
 
     :return vehicleestimates: The following information
         VehicleID—Unique Identifier for a Vehicle
@@ -139,16 +132,11 @@ def get_stop_arrival_times(times_per_stop: int = 1, route_ids: list = None, stop
     """
     Return stop arrival times for all vehicles.
 
-    :param api_key: Key used to authorize the request
-    :type api_key: str
-    :param times_per_stop: Optional, number of scheduled times to return.
-    :type times_per_stop: int
-    :param route_ids: Optional, to restrict the results to given Route ID(s).
-    :type route_ids: list of ints
-    :param stop_ids: Optional, to restrict the results to given Stop ID(s)
-    :typestop_ids: list of ints
+    :param times_per_stop: (int) Optional, number of scheduled times to return.
+    :param route_ids: (list) Optional, to restrict the results to given Route ID(s).
+    :param stop_ids: (list of ints) Optional, to restrict the results to given Stop ID(s)
 
-    :return RouteStopArrival: List of dictionaries of the following information
+    :return RouteStopArrival: (List of dictionaries) the following information
         RouteID – Unique Identifier for a Route
         RouteStopID – Unique identifier for a Route Stop
         Description– Not used
@@ -164,7 +152,6 @@ def get_stop_arrival_times(times_per_stop: int = 1, route_ids: list = None, stop
         ScheduledArrivalTime– Scheduled arrival Time of Day
         ScheduledDepartureTime– Scheduled departure Time of Day
         OnTimeStatus– 0 – On time, 2 – Early, 3 – Late
-    :type RouteStopArrival: list
     """
 
     payload = {"timesPerStop": times_per_stop}
@@ -176,9 +163,11 @@ def get_stop_arrival_times(times_per_stop: int = 1, route_ids: list = None, stop
 
     return _query("GetStopArrivalTimes", payload)
 
+
 def get_route_stop_arrivals(times_per_stop: int = 1) -> Dict[str, Any]:
     """
     Return stop arrival times for all vehicles.
+    :param times_per_stop: (int) Optional, number of scheduled times to return.
 
     :return:
     """
@@ -186,15 +175,15 @@ def get_route_stop_arrivals(times_per_stop: int = 1) -> Dict[str, Any]:
     payload = {"TimesPerStopString": times_per_stop}
     return _query("GetRouteStopArrivals", payload)
 
+
 def get_route_schedules(route_id: int):
     """
     Used to return scheduled times for a Route. This is used for cyclical routes, where the route runs twice an hour on
     the exact same path and schedule.
 
-    :param route_id: Optional, to restrict the results to a given Route ID
-    :type route_id: int
+    :param route_id: (int) Optional, to restrict the results to a given Route ID
 
-    :return RouteSchedule:
+    :return RouteSchedule: (list of dictionaries)
         RouteScheduleID – Unique ID for each schedule
         RouteID – Unique Identifier for a Route
         StartTime – Time of day the Route Schedule starts
@@ -207,20 +196,19 @@ def get_route_schedules(route_id: int):
         RouteScheduleID – Unique ID for the schedule
         RouteStopID – Unique Identifier for a Stop on a Route
         MinutesAfterStart – Number of minutes after the start of the loop until arrival at this stop
-    :type RouteSchedule: List of dictionaries
-
     """
     payload = {"routeID": route_id} if route_id else {}
     return _query("GetRouteSchedules", payload)
+
 
 def get_route_schedule_times(route_id: str = None):
     """
     Used to return times in the day that a Route is active.
 
-    :param route_id: Optional, to restrict the results to a given Route ID.
+    :param route_id: (str) Optional, to restrict the results to a given Route ID.
     :type route_id: str
 
-    :return RouteScheduleTime:
+    :return RouteScheduleTime: (list of dictionaries)
         RouteID – Unique Identifier for a Route
         StartTimeUTC – UTC time of day the Route Schedule starts
         EndTimeUTC – UTC time of day the Route Schedule ends
@@ -228,7 +216,6 @@ def get_route_schedule_times(route_id: str = None):
         EndTime – Time of day (in MST) the Route Schedule ends
         ServerTime– Current time of day (in MST)
         ServerTimeUTC– UTC Current Time of day
-    :type RouteScheduleTime: List of dictionaries
     """
     payload = {"routeID": route_id} if route_id else {}
     return _query("GetRouteScheduleTimes", payload)
@@ -238,10 +225,9 @@ def get_routes(route_id: str = None):
     """
     Abbreviated view of all active Routes on Ride Systems. Used for Smart Phones where data size is a limiting factor.
 
-    :param route_id: Optional, to restrict the results to a given Route ID.
-    :type route_id: str
+    :param route_id: (str) Optional, to restrict the results to a given Route ID.
 
-    :return SmartPhoneRoute:
+    :return SmartPhoneRoute: (list of dictionaries)
         RouteID – Unique Identifier for a Route
         Description – Description of the Route
         MapLineColor – Color of the Route on the Map
@@ -252,7 +238,6 @@ def get_routes(route_id: str = None):
         StopTimesPDFLink – Link to use to get the Schedule for this Route
         HideRouteLine – Setting on whether to show the Route Line
         UseScheduleTripsInPassengerCounter– Not used
-    :type SmartPhoneRoute: List of dictionaries
     """
     payload = {"routeID": route_id} if route_id else {}
     return _query("GetRoutes", payload)
@@ -262,10 +247,9 @@ def get_stops(route_id: str = None):
     """
     Abbreviated view of all active Stops on a route. Used for Smart Phones where data size is a limiting factor.
 
-    :param route_id: Optional, to restrict the results to a given Route ID.
-    :type route_id: str
+    :param route_id: (str) Optional, to restrict the results to a given Route ID.
 
-    :return SmartPhoneRouteStop:
+    :return SmartPhoneRouteStop: (list of dictionaries)
         RouteStopID – Unique Identifier for a Stop on a Route
         RouteID – Unique Identifier for a Route
         Description – Description of the Stop
@@ -280,7 +264,6 @@ def get_stops(route_id: str = None):
         Latitude
         Longitude
         Heading- Not used
-    :type SmartPhoneRouteStop: List of dictionaries
     """
     payload = {"routeID": route_id} if route_id else {}
     return _query("GetStops", payload)
@@ -290,16 +273,14 @@ def get_markers(route_id: str = None):
     """
     Abbreviated view of all active Landmarks on a route. Used for Smart Phones where data size is a limiting factor.
 
-    :param route_id: Optional, to restrict the results to a given Route ID.
-    :type route_id: str
+    :param route_id: (str) Optional, to restrict the results to a given Route ID.
 
-    :return SmartPhoneLandmark:
+    :return SmartPhoneLandmark: (list of dictionaries)
         RouteID – Unique Identifier for a Route
         LandmarkID – Unique identifier for the Landmark
         Label – Description to be put on the map
         Latitude
         Longitude
-    :type SmartPhoneLandmark: List of dictionaries
     """
     payload = {"routeID": route_id} if route_id else {}
     return _query("GetMarkers", payload)
@@ -309,8 +290,7 @@ def get_map_config():
     """
     Returns settings that are used for laying out the map
 
-    :return MapConfig: See docs for return information
-    :type Mapconfig: List of dictionaries
+    :return MapConfig: (list of dictionaries) See docs for return information
     """
     return _query("GetMapConfig")
 
@@ -318,6 +298,7 @@ def get_map_config():
 def get_routes_for_map() -> Dict[str, Any]:
     """Return the routes with Vehicle Route Name, Vehicle ID, and all stops, etc."""
     return _query("GetRoutesForMap")
+
 
 def get_ridership_data(start_date, end_date):
     """
@@ -328,7 +309,7 @@ def get_ridership_data(start_date, end_date):
     :param end_date: The date to end the range (same format as start_date)
     :type end_date: str
 
-    :return Ridership: The following data
+    :return Ridership: (list of dictionaries)
         ClientTime
         Counter
         CounterType
@@ -345,10 +326,10 @@ def get_ridership_data(start_date, end_date):
         Time
         Vehicle
         VehicleID
-    :type Ridership: List of dictionaries
     """
     payload = {"StartDate": start_date, "EndDate": end_date}
     return _query("GetRidershipData", payload)
+
 
 def _query(method_name, params=None):
     payload = {"ApiKey": API_KEY}

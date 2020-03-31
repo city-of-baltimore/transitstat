@@ -30,6 +30,7 @@ def parse_sheet(filename):
             ridership[rider_date] = ridership.setdefault(rider_date, 0) + row['Boarding']
     return ridership
 
+
 def insert_into_db(ridership, route_id):
     """
     Insert the ridership dictionary into the database
@@ -62,6 +63,7 @@ def insert_into_db(ridership, route_id):
                         "VALUES (?, ?, ?);"), insert_array)
     cursor.commit()
 
+
 def start_from_cmdline():
     """
     Parse args and start
@@ -76,6 +78,7 @@ def start_from_cmdline():
 
     ridership = parse_sheet(args.file)
     insert_into_db(ridership, args.routeid)
+
 
 if __name__ == '__main__':
     start_from_cmdline()
