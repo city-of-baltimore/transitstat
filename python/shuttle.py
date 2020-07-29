@@ -14,6 +14,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
 from typing import Dict, Any
+
+from retrying import retry
 import requests
 
 SESS = requests.session()
@@ -84,7 +86,7 @@ def get_map_vehicle_points() -> Dict[str, Any]:
     Return the map location for all active vehicles.
 
     :return vehicle: (list) List of dictionaries containing the following information
-        VehicleID—Unique Identifier for a Vehicle
+        VehicleID — Unique Identifier for a Vehicle
         RouteID – Unique Identifier for a Route
         Name – Name of the Vehicle
         Latitude – Latitude of Vehicle’s current position
@@ -105,7 +107,7 @@ def get_vehicle_route_stop_estimates(vehicle_id: list, quantity: int = 2) -> Dic
     :param quantity: (int) Number of records to return.
 
     :return vehicleestimates: The following information
-        VehicleID—Unique Identifier for a Vehicle
+        VehicleID — Unique Identifier for a Vehicle
         Estimates[] – Estimates
         RouteStopId – Unique ID of each Route Stop
         Description – Description of Route Stop
@@ -124,7 +126,7 @@ def get_vehicle_route_stop_estimates(vehicle_id: list, quantity: int = 2) -> Dic
     payload = {"quantity": str(quantity)}
 
     if vehicle_id:
-        payload["vehicleIdStrings"] = ",".join(vehicle_id)
+        payload["vehicleIdStrings"] = ",".join(str(i) for i in vehicle_id)
     return _query("GetVehicleRouteStopEstimates", payload)
 
 
@@ -139,11 +141,11 @@ def get_stop_arrival_times(times_per_stop: int = 1, route_ids: list = None, stop
     :return RouteStopArrival: (List of dictionaries) the following information
         RouteID – Unique Identifier for a Route
         RouteStopID – Unique identifier for a Route Stop
-        Description– Not used
-        Times[] –Arrival Times
+        Description – Not used
+        Times[] – Arrival Times
         VehicleId – ID of Vehicle
         Text – Text of Estimate
-        Time –Time of Day of expected arrival
+        Time – Time of Day of expected arrival
         Seconds – Estimated Seconds till Arrival
         IsArriving – Is the vehicle arriving?
         EstimateTime – Estimated arrival Time of Day
@@ -170,13 +172,25 @@ def get_route_stop_arrivals(times_per_stop: int = 1) -> Dict[str, Any]:
     :param times_per_stop: (int) Optional, number of scheduled times to return.
 
     :return:
+        RouteID - value representing the route
+        RouteStopID - value representing the stop
+        ScheduledTimes - dictionary with the following values for the RouteStopID
+            ArrivalTimeUTC - scheduled arrival time
+            AssignedVehicleId - VehicleID assigned to the block with this scheduled arrival
+            Block - string identifying the block assigned to the next arrival
+            DepartureTimeUTC - scheduled stop departure time
+        VehicleEstimates - dictionary with the following values for each VehicleID
+            Block - string identifying the schedule block
+            OnRoute - is the vehicle on the assigned route
+            SecondsToStop - seconds until we get to RouteStopID
+            VehicleId – ID of Vehicle
     """
 
     payload = {"TimesPerStopString": times_per_stop}
     return _query("GetRouteStopArrivals", payload)
 
 
-def get_route_schedules(route_id: int):
+def get_route_schedules(route_id: int = None):
     """
     Used to return scheduled times for a Route. This is used for cyclical routes, where the route runs twice an hour on
     the exact same path and schedule.
@@ -206,7 +220,6 @@ def get_route_schedule_times(route_id: str = None):
     Used to return times in the day that a Route is active.
 
     :param route_id: (str) Optional, to restrict the results to a given Route ID.
-    :type route_id: str
 
     :return RouteScheduleTime: (list of dictionaries)
         RouteID – Unique Identifier for a Route
@@ -331,6 +344,7 @@ def get_ridership_data(start_date, end_date):
     return _query("GetRidershipData", payload)
 
 
+@retry(wait_fixed=3000, stop_max_attempt_number=5)
 def _query(method_name, params=None):
     payload = {"ApiKey": API_KEY}
     if params:
