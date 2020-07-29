@@ -1,22 +1,50 @@
 """ Read the Harbor Connector ridership from an excel spreadsheet and put it in the database"""
 import argparse
+import glob
+import logging
 import math
+import os
+import re
 
 import pandas as pd
 from dateutil import parser
 import pyodbc
 
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
 
-def parse_sheet(filename):
-    """
-    Parse the specified file for all of the ridership data in each of its sheets, and return a dictionary of values
-    with date (yyyy-mm-dd) -> total ridership
 
-    :param filename: Filename of the file to parse
-    :type filename: str
-    :param ridership: The dates and ridership numbers of the Harbor Connector from parse_sheet()
-    :type ridership: dict
+def parse_sheets(path):
     """
+    Parse the specified file or directory for all of the ridership data in each of its sheets, and return a dictionary
+    of values with date (yyyy-mm-dd) -> total ridership. If a directory is provided, then all xlsx files will be
+    processed
+
+    :param path: Path of the file or directory to parse
+    :type path: str
+    :return ridership: (dict) The dates and ridership numbers of the Harbor Connector from parse_sheet()
+    {<routeid> : {<date>, <ridership>, ...},
+     ...
+    }
+    """
+    logging.info("Processing %s", path)
+    if os.path.isdir(path):
+        ret = {}
+        for hc_file in glob.glob(os.path.join(path, 'HC* *-*.xlsx')):
+            route_id, ridership = _parse_sheets(hc_file)
+            ridership.update(ret.setdefault(route_id, {}))
+            ret[route_id] = ridership
+        return ret
+    route_id, ridership = _parse_sheets(path)
+    return {route_id: ridership}
+
+
+def _parse_sheets(filename):
+    route_id = re.search(r'HC(\d*) \d{1,2}-\d{4}.xlsx', filename).group(1)
+    if not route_id.isdigit():
+        logging.error("Unable to get route from %s", filename)
     sheets_dict = pd.read_excel(filename, sheet_name=None)
 
     ridership = {}
@@ -26,27 +54,26 @@ def parse_sheet(filename):
             if isinstance(row['Created on'], float) and math.isnan(row['Created on']):
                 break
             rider_date = parser.parse(row['Created on']).strftime('%Y-%m-%d')
-            print(rider_date, ridership, row['Boarding'])
             ridership[rider_date] = ridership.setdefault(rider_date, 0) + row['Boarding']
-    return ridership
+    logging.info("Route id: %s, ridership: %s", route_id, ridership)
+    return route_id, ridership
 
 
-def insert_into_db(ridership, route_id):
+def insert_into_db(parsed_data):
     """
     Insert the ridership dictionary into the database
 
-    :param ridership: The dates and ridership numbers of the Harbor Connector from parse_sheet()
-    :type ridership: dict
-    :param route_id: The route id of the Harbor Connector data (IE: 1, 2 or 3)
-    :type ridership: int
+    :param parsed_data: The route, dates and ridership numbers of the Harbor Connector from parse_sheet()
+    :type parsed_data: dict
     :return: None
     """
     conn = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_DATA;Trusted_Connection=yes;')
     cursor = conn.cursor()
 
     insert_array = []
-    for date, riders in ridership.items():
-        insert_array.append((route_id, date, riders, route_id, date, riders))
+    for route_id, ridership in parsed_data.items():
+        for date, riders in ridership.items():
+            insert_array.append((route_id, date, riders, route_id, date, riders))
     cursor.executemany(("MERGE  "
                         "INTO hc_ridership WITH (HOLDLOCK) AS target "
                         "USING (SELECT "
@@ -69,15 +96,13 @@ def start_from_cmdline():
     Parse args and start
     """
     aparser = argparse.ArgumentParser(description='Harbor Connector spreadsheet importer')
-    aparser.add_argument('-r', '--routeid',
-                         help='The Harbor Connector route this spreadsheet tracks')
-    aparser.add_argument('-f', '--file',
-                         help='File to import')
+    aparser.add_argument('-p', '--path',
+                         help='File or directory to import. If directory is provided, then all files will be processed')
 
     args = aparser.parse_args()
 
-    ridership = parse_sheet(args.file)
-    insert_into_db(ridership, args.routeid)
+    ridership = parse_sheets(args.path)
+    insert_into_db(ridership)
 
 
 if __name__ == '__main__':
