@@ -5,6 +5,7 @@ import logging
 import math
 import os
 import re
+import traceback
 
 import pandas as pd
 from dateutil import parser
@@ -53,8 +54,21 @@ def _parse_sheets(filename):
         for _, row in sheet.iterrows():
             if isinstance(row['Created on'], float) and math.isnan(row['Created on']):
                 break
-            rider_date = parser.parse(row['Created on']).strftime('%Y-%m-%d')
-            ridership[rider_date] = ridership.setdefault(rider_date, 0) + row['Boarding']
+            try:
+                created_on = row['Created on'].replace('Thur', 'Thu')
+                rider_date = parser.parse(created_on).strftime('%Y-%m-%d')
+            except parser._parser.ParserError: # pylint:disable=protected-access
+                logging.error("Parse failure. %s", traceback.format_exc())
+                continue
+
+            if isinstance(row.get('Boarding'), str) and row.get('Boarding').isdigit():
+                boarding = int(row.get('Boarding'))
+            elif isinstance(row.get('Boarding'), int):
+                boarding = row.get('Boarding')
+            else:
+                boarding = 0
+            ridership[rider_date] = ridership.setdefault(rider_date, 0) + boarding
+
     logging.info("Route id: %s, ridership: %s", route_id, ridership)
     return route_id, ridership
 
