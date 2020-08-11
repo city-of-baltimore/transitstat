@@ -57,7 +57,7 @@ def _parse_sheets(filename):
             try:
                 created_on = row['Created on'].replace('Thur', 'Thu')
                 rider_date = parser.parse(created_on).strftime('%Y-%m-%d')
-            except parser._parser.ParserError: # pylint:disable=protected-access
+            except parser._parser.ParserError:  # pylint:disable=protected-access
                 logging.error("Parse failure. %s", traceback.format_exc())
                 continue
 
