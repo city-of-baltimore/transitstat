@@ -1,4 +1,12 @@
-""" Read the Harbor Connector ridership from an excel spreadsheet and put it in the database"""
+"""
+Read the Harbor Connector ridership from an excel spreadsheet and put it in the database
+
+CREATE TABLE [dbo].[hc_ridership](
+    [route_id] [int] NOT NULL,
+    [date] [date] NOT NULL,
+    [riders] [int] NOT NULL
+)
+"""
 import argparse
 import glob
 import logging
@@ -63,8 +71,8 @@ def _parse_sheets(filename):
 
             if isinstance(row.get('Boarding'), str) and row.get('Boarding').isdigit():
                 boarding = int(row.get('Boarding'))
-            elif isinstance(row.get('Boarding'), int):
-                boarding = row.get('Boarding')
+            elif isinstance(row.get('Boarding'), (int, float)):
+                boarding = int(row.get('Boarding'))
             else:
                 boarding = 0
             ridership[rider_date] = ridership.setdefault(rider_date, 0) + boarding
