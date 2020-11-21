@@ -1,11 +1,14 @@
 import pytest
 
-import ..creds
-import ..ridesystems
+import ridesystems
+
+from .. import creds
+
 
 def test_login():
-    ridesystems.Ridership(creds.RIDESYSTEMS_USERNAME, creds.RIDESYSTEMS_PASSWORD)
+    ridesystems.Scraper(creds.RIDESYSTEMS_USERNAME, creds.RIDESYSTEMS_PASSWORD)
+
 
 def test_login_failure():
     with pytest.raises(AssertionError):
-        ridesystems.Ridership('invalidusername', 'invalidpassword')
+        ridesystems.Scraper('invalidusername', 'invalidpassword')
