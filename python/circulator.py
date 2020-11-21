@@ -1,10 +1,11 @@
+""" Driver for the ridesystems report scraper """
 import argparse
 import logging
 from datetime import date, timedelta, datetime
 
 import creds
 import pyodbc
-import ridesystems
+import ridesystems  # pylint:disable=import-error # Because we don't have the wheel in github actions
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.INFO,
@@ -14,13 +15,14 @@ conn = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_
 
 
 def update_database(start_date, end_date):
-    rs_cls = ridesystems.Ridesystems(creds.RIDESYSTEMS_USERNAME, creds.RIDESYSTEMS_PASSWORD)
+    """Gets the data from the ride systems scraper and puts it in the database"""
+    rs_cls = ridesystems.Scraper(creds.RIDESYSTEMS_USERNAME, creds.RIDESYSTEMS_PASSWORD)
 
     for search_date in daterange(start_date, end_date):
         for row in rs_cls.get_otp(search_date, search_date):
             conn.execute("""
             MERGE [ccc_arrival_times2] USING (
-            VALUES 
+            VALUES
                 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ) AS vals (date, route, stop, blockid, scheduledarrivaltime, actualarrivaltime, scheduleddeparturetime,
             actualdeparturetime, ontimestatus, vehicle)
@@ -39,8 +41,8 @@ def update_database(start_date, end_date):
             WHEN NOT MATCHED THEN
                 INSERT (date, route, stop, blockid, scheduledarrivaltime, actualarrivaltime, scheduleddeparturetime,
                     actualdeparturetime, ontimestatus, vehicle)
-                VALUES (vals.date, vals.route, vals.stop, vals.blockid, vals.scheduledarrivaltime, 
-                    vals.actualarrivaltime, vals.scheduleddeparturetime, vals.actualdeparturetime, vals.ontimestatus, 
+                VALUES (vals.date, vals.route, vals.stop, vals.blockid, vals.scheduledarrivaltime,
+                    vals.actualarrivaltime, vals.scheduleddeparturetime, vals.actualdeparturetime, vals.ontimestatus,
                     vals.vehicle);
             """, row['date'], row['route'], row['stop'], row['blockid'], row['scheduledarrivaltime'],
                          row['actualarrivaltime'], row['scheduleddeparturetime'], row['actualdeparturetime'],
@@ -49,8 +51,9 @@ def update_database(start_date, end_date):
 
 
 def daterange(start_date, end_date):
-    for n in range(int((end_date - start_date).days)):
-        yield start_date + timedelta(n)
+    """Helper to iterate over dates"""
+    for i in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(i)
 
 
 if __name__ == '__main__':
@@ -71,10 +74,10 @@ if __name__ == '__main__':
                         help='Optional: Number of days to search, including the start date.')
     args = parser.parse_args()
 
-    start_date = datetime(args.year, args.month, args.day)
-    end_date = start_date + timedelta(days=args.numofdays)
+    start = datetime(args.year, args.month, args.day)
+    end = start + timedelta(days=args.numofdays)
 
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
 
-    update_database(start_date, end_date)
+    update_database(start, end)
