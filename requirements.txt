@@ -5,3 +5,5 @@ tqdm
 requests
 pandas
 retrying
+bs4
+requests_toolbelt
