@@ -28,7 +28,6 @@ def update_database(start_date, end_date):
             actualdeparturetime, ontimestatus, vehicle)
             ON (ccc_arrival_times2.date = vals.date AND
                 ccc_arrival_times2.route = vals.route AND
-                ccc_arrival_times2.stop = vals.stop AND
                 ccc_arrival_times2.blockid = vals.blockid)
             WHEN MATCHED THEN
                 UPDATE SET
@@ -36,6 +35,7 @@ def update_database(start_date, end_date):
                 actualarrivaltime = vals.actualarrivaltime,
                 scheduleddeparturetime = vals.scheduleddeparturetime,
                 actualdeparturetime = vals.actualdeparturetime,
+                stop = vals.stop
                 ontimestatus = vals.ontimestatus,
                 vehicle = vals.vehicle
             WHEN NOT MATCHED THEN
