@@ -16,6 +16,7 @@ conn = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_
 
 def update_database(start_date, end_date):
     """Gets the data from the ride systems scraper and puts it in the database"""
+    logging.info("Processing %s to %s", start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y'))
     rs_cls = ridesystems.Scraper(creds.RIDESYSTEMS_USERNAME, creds.RIDESYSTEMS_PASSWORD)
 
     for search_date in daterange(start_date, end_date):
