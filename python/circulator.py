@@ -1,4 +1,18 @@
-""" Driver for the ridesystems report scraper """
+""" Driver for the ridesystems report scraper
+
+CREATE TABLE [dbo].[ccc_arrival_times2](
+    [date] [date] NOT NULL,
+    [route] [varchar](50) NOT NULL,
+    [stop] [varchar](max) NOT NULL,
+    [blockid] [varchar](100) NOT NULL,
+    [scheduledarrivaltime] [time](7) NOT NULL,
+    [actualarrivaltime] [time](7) NULL,
+    [scheduleddeparturetime] [time](7) NOT NULL,
+    [actualdeparturetime] [time](7) NULL,
+    [ontimestatus] [varchar](20) NULL,
+    [vehicle] [varchar](50) NULL
+)
+"""
 import argparse
 import logging
 from datetime import date, timedelta, datetime
@@ -36,7 +50,7 @@ def update_database(start_date, end_date):
                 actualarrivaltime = vals.actualarrivaltime,
                 scheduleddeparturetime = vals.scheduleddeparturetime,
                 actualdeparturetime = vals.actualdeparturetime,
-                stop = vals.stop
+                stop = vals.stop,
                 ontimestatus = vals.ontimestatus,
                 vehicle = vals.vehicle
             WHEN NOT MATCHED THEN
