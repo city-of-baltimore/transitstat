@@ -15,11 +15,12 @@ import os
 import re
 import traceback
 
-import pandas as pd
+import pandas as pd  # type: ignore
 from dateutil import parser
-import pyodbc
+import pyodbc  # type: ignore
 
 logging.basicConfig(
+    filename='ridership_connector.log',
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
@@ -117,6 +118,7 @@ def start_from_cmdline():
     """
     Parse args and start
     """
+    logging.info("Starting the harbor connector spreadsheet importer")
     aparser = argparse.ArgumentParser(description='Harbor Connector spreadsheet importer')
     aparser.add_argument('-p', '--path',
                          help='File or directory to import. If directory is provided, then all files will be processed')

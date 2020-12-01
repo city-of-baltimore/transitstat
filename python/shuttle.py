@@ -1,5 +1,5 @@
 """"
-The Pitt API, to access workable data of the University of Pittsburgh
+The Ridesystems API, to access workable data of any Ridesystems system
 Copyright (C) 2015 Ritwik Gupta
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,18 +13,48 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional, TypedDict, Union, List
+from datetime import datetime, date
 
-from retrying import retry
+from retrying import retry  # type: ignore
 import requests
+
+from .creds import RIDESYSTEMS_API_KEY as API_KEY
 
 SESS = requests.session()
 
-API_KEY = "8882812681"
 BASE_URL = "https://cityofbaltimore.ridesystems.net"
 
 
-def get_routes_for_map_with_schedule_with_encoded_line():
+# Return types used for type checking
+class StopArrivalTimesDict(TypedDict):
+    """Used for type checking"""
+    timesPerStop: int
+    routeIDs: Optional[str]
+    routeStopIDs: Optional[str]
+
+
+class VehicleRouteStopEstimates(TypedDict):
+    """Used for type checking"""
+    quantity: str
+    vehicleIdStrings: Optional[str]
+
+
+class RouteSchedules(TypedDict):
+    """Used for type checking"""
+    routeID: Optional[int]
+
+
+RidershipDate = Union[date, datetime]
+
+
+class Ridership(TypedDict):
+    """Used for type checking"""
+    StartDate: RidershipDate
+    EndDate: RidershipDate
+
+
+def get_routes_for_map_with_schedule_with_encoded_line() -> list:
     """
     Used to retrieve active Routes from Ride Systems. Also contains a link to a schedule for each particular route
 
@@ -123,14 +153,16 @@ def get_vehicle_route_stop_estimates(vehicle_id: list, quantity: int = 2) -> Dic
     :return type: list of dictionaries
 
     """
-    payload = {"quantity": str(quantity)}
+    payload: VehicleRouteStopEstimates = {"quantity": str(quantity), "vehicleIdStrings": None}
 
     if vehicle_id:
         payload["vehicleIdStrings"] = ",".join(str(i) for i in vehicle_id)
     return _query("GetVehicleRouteStopEstimates", payload)
 
 
-def get_stop_arrival_times(times_per_stop: int = 1, route_ids: list = None, stop_ids: list = None) -> Dict[str, Any]:
+def get_stop_arrival_times(times_per_stop: int = 1,
+                           route_ids: List[int] = None,
+                           stop_ids: list = None) -> Dict[str, Any]:
     """
     Return stop arrival times for all vehicles.
 
@@ -155,10 +187,9 @@ def get_stop_arrival_times(times_per_stop: int = 1, route_ids: list = None, stop
         ScheduledDepartureTime– Scheduled departure Time of Day
         OnTimeStatus– 0 – On time, 2 – Early, 3 – Late
     """
-
-    payload = {"timesPerStop": times_per_stop}
+    payload: StopArrivalTimesDict = {"timesPerStop": times_per_stop, "routeIDs": None, "routeStopIDs": None}
     if route_ids:
-        payload["routeIDs"] = ", ".join(route_ids)
+        payload["routeIDs"] = ", ".join([str(x) for x in route_ids])
 
     if stop_ids:
         payload["routeStopIDs"] = ", ".join(stop_ids)
@@ -186,11 +217,11 @@ def get_route_stop_arrivals(times_per_stop: int = 1) -> Dict[str, Any]:
             VehicleId – ID of Vehicle
     """
 
-    payload = {"TimesPerStopString": times_per_stop}
+    payload: StopArrivalTimesDict = {"timesPerStop": times_per_stop, "routeIDs": None, "routeStopIDs": None}
     return _query("GetRouteStopArrivals", payload)
 
 
-def get_route_schedules(route_id: int = None):
+def get_route_schedules(route_id: int = None) -> Dict[str, Any]:
     """
     Used to return scheduled times for a Route. This is used for cyclical routes, where the route runs twice an hour on
     the exact same path and schedule.
@@ -211,15 +242,15 @@ def get_route_schedules(route_id: int = None):
         RouteStopID – Unique Identifier for a Stop on a Route
         MinutesAfterStart – Number of minutes after the start of the loop until arrival at this stop
     """
-    payload = {"routeID": route_id} if route_id else {}
+    payload: RouteSchedules = {"routeID": route_id} if route_id else {"routeID": None}
     return _query("GetRouteSchedules", payload)
 
 
-def get_route_schedule_times(route_id: str = None):
+def get_route_schedule_times(route_id: int = None) -> Dict[str, Any]:
     """
     Used to return times in the day that a Route is active.
 
-    :param route_id: (str) Optional, to restrict the results to a given Route ID.
+    :param route_id: (int) Optional, to restrict the results to a given Route ID.
 
     :return RouteScheduleTime: (list of dictionaries)
         RouteID – Unique Identifier for a Route
@@ -230,15 +261,15 @@ def get_route_schedule_times(route_id: str = None):
         ServerTime– Current time of day (in MST)
         ServerTimeUTC– UTC Current Time of day
     """
-    payload = {"routeID": route_id} if route_id else {}
+    payload: RouteSchedules = {"routeID": route_id} if route_id else {"routeID": None}
     return _query("GetRouteScheduleTimes", payload)
 
 
-def get_routes(route_id: str = None):
+def get_routes(route_id: int = None) -> Dict[str, Any]:
     """
     Abbreviated view of all active Routes on Ride Systems. Used for Smart Phones where data size is a limiting factor.
 
-    :param route_id: (str) Optional, to restrict the results to a given Route ID.
+    :param route_id: (int) Optional, to restrict the results to a given Route ID.
 
     :return SmartPhoneRoute: (list of dictionaries)
         RouteID – Unique Identifier for a Route
@@ -252,15 +283,15 @@ def get_routes(route_id: str = None):
         HideRouteLine – Setting on whether to show the Route Line
         UseScheduleTripsInPassengerCounter– Not used
     """
-    payload = {"routeID": route_id} if route_id else {}
+    payload: RouteSchedules = {"routeID": route_id} if route_id else {"routeID": None}
     return _query("GetRoutes", payload)
 
 
-def get_stops(route_id: str = None):
+def get_stops(route_id: int = None) -> Dict[str, Any]:
     """
     Abbreviated view of all active Stops on a route. Used for Smart Phones where data size is a limiting factor.
 
-    :param route_id: (str) Optional, to restrict the results to a given Route ID.
+    :param route_id: (int) Optional, to restrict the results to a given Route ID.
 
     :return SmartPhoneRouteStop: (list of dictionaries)
         RouteStopID – Unique Identifier for a Stop on a Route
@@ -278,15 +309,15 @@ def get_stops(route_id: str = None):
         Longitude
         Heading- Not used
     """
-    payload = {"routeID": route_id} if route_id else {}
+    payload: RouteSchedules = {"routeID": route_id} if route_id else {"routeID": None}
     return _query("GetStops", payload)
 
 
-def get_markers(route_id: str = None):
+def get_markers(route_id: int = None) -> Dict[str, Any]:
     """
     Abbreviated view of all active Landmarks on a route. Used for Smart Phones where data size is a limiting factor.
 
-    :param route_id: (str) Optional, to restrict the results to a given Route ID.
+    :param route_id: (int) Optional, to restrict the results to a given Route ID.
 
     :return SmartPhoneLandmark: (list of dictionaries)
         RouteID – Unique Identifier for a Route
@@ -295,11 +326,11 @@ def get_markers(route_id: str = None):
         Latitude
         Longitude
     """
-    payload = {"routeID": route_id} if route_id else {}
+    payload: RouteSchedules = {"routeID": route_id} if route_id else {"routeID": None}
     return _query("GetMarkers", payload)
 
 
-def get_map_config():
+def get_map_config() -> Dict[str, Any]:
     """
     Returns settings that are used for laying out the map
 
@@ -313,7 +344,7 @@ def get_routes_for_map() -> Dict[str, Any]:
     return _query("GetRoutesForMap")
 
 
-def get_ridership_data(start_date, end_date):
+def get_ridership_data(start_date: RidershipDate, end_date: RidershipDate) -> Dict[str, Any]:
     """
     Return the ridership from an APC
 
@@ -340,12 +371,12 @@ def get_ridership_data(start_date, end_date):
         Vehicle
         VehicleID
     """
-    payload = {"StartDate": start_date, "EndDate": end_date}
+    payload: Ridership = {"StartDate": start_date, "EndDate": end_date}
     return _query("GetRidershipData", payload)
 
 
 @retry(wait_fixed=3000, stop_max_attempt_number=5)
-def _query(method_name, params=None):
+def _query(method_name: str, params: dict = None) -> Dict[str, Any]:
     payload = {"ApiKey": API_KEY}
     if params:
         payload.update(params)

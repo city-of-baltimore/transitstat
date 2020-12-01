@@ -3,9 +3,9 @@ Tracks circulator activity on a real time basis by tracking start and stop times
 ccc_bus_runtimes
 busid  | starttime | endtime
 """
-import pyodbc
+import pyodbc  # type: ignore
 
-import shuttle
+from .shuttle import get_map_vehicle_points
 
 ROUTE_ID = {1: 'Banner',
             2: 'Purple',
@@ -59,7 +59,7 @@ def process_vehicles():
     # Get list of open bus schedules
     active_buses = get_active_buses()
 
-    for map_vehicle_point in shuttle.get_map_vehicle_points():
+    for map_vehicle_point in get_map_vehicle_points():
         if not map_vehicle_point['IsOnRoute']:
             continue
 
