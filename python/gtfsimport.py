@@ -8,8 +8,9 @@ import tempfile
 import zipfile
 
 import pyodbc  # type: ignore
-from .shuttle import get_stops
 
+from ridesystems.api import API
+from .creds import RIDESYSTEMS_API_KEY
 
 CONN = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_DATA;Trusted_Connection=yes;')
 CURSOR = CONN.cursor()
@@ -138,7 +139,9 @@ def insert_stops(data_file, recreate_table=False):
 
     # Because ridesystems is awful, and can't use a single RouteStopID (or even only two, or three... there are at least
     # FOUR!!), we have to do this absolutely awful hack here to figure out what they might mean
-    dumb_stoplist = get_stops('4') + get_stops('10') + get_stops('12') + get_stops('13')
+    rs_interface = API(RIDESYSTEMS_API_KEY)
+    dumb_stoplist = rs_interface.get_stops('4') + rs_interface.get_stops('10') + rs_interface.get_stops('12') + \
+        rs_interface.get_stops('13')
     dumb_routestopids = {i['RouteStopID']: [i['Description'], i['Latitude'], i['Longitude'], i['RouteID']]
                          for i in dumb_stoplist}
 
