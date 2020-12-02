@@ -25,30 +25,33 @@ SESS = requests.session()
 
 BASE_URL = "https://cityofbaltimore.ridesystems.net"
 
+# Note: We disable unsubscriptable-object because of bug bug: https://github.com/PyCQA/pylint/issues/3882 in pylint.
+# When that is fixed, we can remove the disables
+
 
 # Return types used for type checking
-class StopArrivalTimesDict(TypedDict):
+class StopArrivalTimesDict(TypedDict):  # pylint:disable=too-few-public-methods,inherit-non-class
     """Used for type checking"""
     timesPerStop: int
-    routeIDs: Optional[str]
-    routeStopIDs: Optional[str]
+    routeIDs: Optional[str]  # pylint:disable=unsubscriptable-object
+    routeStopIDs: Optional[str]  # pylint:disable=unsubscriptable-object
 
 
-class VehicleRouteStopEstimates(TypedDict):
+class VehicleRouteStopEstimates(TypedDict):  # pylint:disable=too-few-public-methods,inherit-non-class
     """Used for type checking"""
     quantity: str
-    vehicleIdStrings: Optional[str]
+    vehicleIdStrings: Optional[str]  # pylint:disable=unsubscriptable-object
 
 
-class RouteSchedules(TypedDict):
+class RouteSchedules(TypedDict):  # pylint:disable=too-few-public-methods,inherit-non-class
     """Used for type checking"""
-    routeID: Optional[int]
+    routeID: Optional[int]  # pylint:disable=unsubscriptable-object
 
 
-RidershipDate = Union[date, datetime]
+RidershipDate = Union[date, datetime]  # pylint:disable=unsubscriptable-object
 
 
-class Ridership(TypedDict):
+class Ridership(TypedDict):  # pylint:disable=too-few-public-methods,inherit-non-class
     """Used for type checking"""
     StartDate: RidershipDate
     EndDate: RidershipDate
