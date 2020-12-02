@@ -21,4 +21,4 @@ jobs:
       - name: Type checking
         run: |
           pip install -U mypy -r requirements.txt
-          mypy atves
+          mypy python
