@@ -21,8 +21,6 @@ jobs:
       - name: Lint with pylint
         run: |
           dir
-          python -c 'import ridesystems;print(dir(ridesystems))'
-          python -c 'import ridesystems.api;print(dir(ridesystems.api))'
           pylint python
       - name: Lint with flake8
         run : |
