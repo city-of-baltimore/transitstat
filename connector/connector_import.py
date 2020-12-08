@@ -7,7 +7,6 @@ CREATE TABLE [dbo].[hc_ridership](
     [riders] [int] NOT NULL
 )
 """
-import argparse
 import glob
 import logging
 import math
@@ -112,22 +111,3 @@ def insert_into_db(parsed_data):
                         "THEN INSERT (route_id, [date], riders) "
                         "VALUES (?, ?, ?);"), insert_array)
     cursor.commit()
-
-
-def start_from_cmdline():
-    """
-    Parse args and start
-    """
-    logging.info("Starting the harbor connector spreadsheet importer")
-    aparser = argparse.ArgumentParser(description='Harbor Connector spreadsheet importer')
-    aparser.add_argument('-p', '--path',
-                         help='File or directory to import. If directory is provided, then all files will be processed')
-
-    args = aparser.parse_args()
-
-    ridership = parse_sheets(args.path)
-    insert_into_db(ridership)
-
-
-if __name__ == '__main__':
-    start_from_cmdline()

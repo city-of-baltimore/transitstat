@@ -6,7 +6,7 @@ busid  | starttime | endtime
 import pyodbc  # type: ignore
 
 from ridesystems.api import API
-from .creds import RIDESYSTEMS_API_KEY
+from circulator.creds import RIDESYSTEMS_API_KEY
 
 ROUTE_ID = {1: 'Banner',
             2: 'Purple',
@@ -83,7 +83,3 @@ def process_vehicles():
     # Any buses left in this list were not active, and should be ended
     for bus_id in active_buses:
         log_inactive_bus(bus_id)
-
-
-if __name__ == '__main__':
-    process_vehicles()

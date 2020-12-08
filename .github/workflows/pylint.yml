@@ -15,19 +15,19 @@ jobs:
           path: ridesystems-repo
       - name: Install dependencies
         run: |
-          pip install --upgrade pip wheel pylint flake8 bandit mypy wheel
+          pip install --upgrade pip wheel pylint flake8 bandit mypy
           pip install --upgrade ./ridesystems-repo
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Lint with pylint
         run: |
           dir
-          pylint python
+          pylint main_circulator.py main_connector.py circulator connector
       - name: Lint with flake8
         run : |
-          flake8 --config=.flake8 python
+          flake8 --config=.flake8 main_circulator.py main_connector.py circulator connector
       - name: Look for security issues with Bandit
         run: |
-          bandit python
+          bandit main_circulator.py main_connector.py circulator connector
       - name: Type checking
         run: |
-          mypy python
+          mypy main_circulator.py main_connector.py circulator connector

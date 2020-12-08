@@ -13,14 +13,13 @@ CREATE TABLE [dbo].[ccc_arrival_times2](
     [vehicle] [varchar](50) NULL
 )
 """
-import argparse
 import logging
-from datetime import date, timedelta, datetime
+from datetime import timedelta
 
 import pyodbc  # type: ignore
 from ridesystems.reports import Reports
 
-from .creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
+from circulator.creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.INFO,
@@ -36,7 +35,7 @@ def update_database(start_date, end_date):
     rs_cls = Reports(RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD)
 
     data = []
-    for search_date in daterange(start_date, end_date):
+    for search_date in date_range(start_date, end_date):
         for row in rs_cls.get_otp(search_date, search_date):
             data.append((row['date'], row['route'], row['stop'], row['blockid'], row['scheduledarrivaltime'],
                          row['actualarrivaltime'], row['scheduleddeparturetime'], row['actualdeparturetime'],
@@ -70,34 +69,7 @@ def update_database(start_date, end_date):
     conn.commit()
 
 
-def daterange(start_date, end_date):
+def date_range(start_date, end_date):
     """Helper to iterate over dates"""
     for i in range(int((end_date - start_date).days)):
         yield start_date + timedelta(i)
-
-
-if __name__ == '__main__':
-    yesterday = date.today() - timedelta(days=1)
-
-    parser = argparse.ArgumentParser(description="Inserts data about the circulator into the database")
-    parser.add_argument("-v", "--verbose", help="Debug logging level")
-    parser.add_argument('-m', '--month', type=int, default=yesterday.month,
-                        help=('Optional: Month of date we should start searching on (IE: 10 for Oct). Defaults to '
-                              'yesterday if not specified'))
-    parser.add_argument('-d', '--day', type=int, default=yesterday.day,
-                        help=('Optional: Day of date we should start searching on (IE: 5). Defaults to yesterday if '
-                              'not specified'))
-    parser.add_argument('-y', '--year', type=int, default=yesterday.year,
-                        help=('Optional: Four digit year we should start searching on (IE: 2020). Defaults to '
-                              'yesterday if not specified'))
-    parser.add_argument('-n', '--numofdays', default=1, type=int,
-                        help='Optional: Number of days to search, including the start date.')
-    args = parser.parse_args()
-
-    start = datetime(args.year, args.month, args.day)
-    end = start + timedelta(days=args.numofdays)
-
-    if args.verbose:
-        logging.basicConfig(level=logging.DEBUG)
-
-    update_database(start, end)
