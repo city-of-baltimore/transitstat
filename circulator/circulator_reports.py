@@ -1,6 +1,6 @@
 """ Driver for the ridesystems report scraper
 
-CREATE TABLE [dbo].[ccc_arrival_times2](
+CREATE TABLE [dbo].[ccc_arrival_times](
     [date] [date] NOT NULL,
     [route] [varchar](50) NOT NULL,
     [stop] [varchar](max) NOT NULL,
@@ -43,20 +43,21 @@ def update_database(start_date, end_date):
 
         if data:
             cursor.executemany("""
-                MERGE [ccc_arrival_times2] USING (
+                MERGE [ccc_arrival_times] USING (
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ) AS vals (date, route, stop, blockid, scheduledarrivaltime, actualarrivaltime, scheduleddeparturetime,
                 actualdeparturetime, ontimestatus, vehicle)
-                ON (ccc_arrival_times2.date = vals.date AND
-                    ccc_arrival_times2.route = vals.route AND
-                    ccc_arrival_times2.blockid = vals.blockid AND
-                    ccc_arrival_times2.stop = vals.stop)
+                ON (ccc_arrival_times.date = vals.date AND
+                    ccc_arrival_times.route = vals.route AND
+                    ccc_arrival_times.blockid = vals.blockid AND
+                    ccc_arrival_times.stop = vals.stop AND
+                    ccc_arrival_times.scheduledarrivaltime = vals.scheduledarrivaltime AND
+                    ccc_arrival_times.scheduleddeparturetime = vals.scheduleddeparturetime)
                 WHEN MATCHED THEN
                     UPDATE SET
-                    scheduledarrivaltime = vals.scheduledarrivaltime,
+                    ,
                     actualarrivaltime = vals.actualarrivaltime,
-                    scheduleddeparturetime = vals.scheduleddeparturetime,
                     actualdeparturetime = vals.actualdeparturetime,
                     ontimestatus = vals.ontimestatus,
                     vehicle = vals.vehicle
