@@ -41,32 +41,33 @@ def update_database(start_date, end_date):
                          row['actualarrivaltime'], row['scheduleddeparturetime'], row['actualdeparturetime'],
                          row['ontimestatus'], row['vehicle']))
 
-    cursor.executemany("""
-        MERGE [ccc_arrival_times2] USING (
-        VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ) AS vals (date, route, stop, blockid, scheduledarrivaltime, actualarrivaltime, scheduleddeparturetime,
-        actualdeparturetime, ontimestatus, vehicle)
-        ON (ccc_arrival_times2.date = vals.date AND
-            ccc_arrival_times2.route = vals.route AND
-            ccc_arrival_times2.blockid = vals.blockid AND
-            ccc_arrival_times2.stop = vals.stop)
-        WHEN MATCHED THEN
-            UPDATE SET
-            scheduledarrivaltime = vals.scheduledarrivaltime,
-            actualarrivaltime = vals.actualarrivaltime,
-            scheduleddeparturetime = vals.scheduleddeparturetime,
-            actualdeparturetime = vals.actualdeparturetime,
-            ontimestatus = vals.ontimestatus,
-            vehicle = vals.vehicle
-        WHEN NOT MATCHED THEN
-            INSERT (date, route, stop, blockid, scheduledarrivaltime, actualarrivaltime, scheduleddeparturetime,
+        if data:
+            cursor.executemany("""
+                MERGE [ccc_arrival_times2] USING (
+                VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) AS vals (date, route, stop, blockid, scheduledarrivaltime, actualarrivaltime, scheduleddeparturetime,
                 actualdeparturetime, ontimestatus, vehicle)
-            VALUES (vals.date, vals.route, vals.stop, vals.blockid, vals.scheduledarrivaltime,
-                vals.actualarrivaltime, vals.scheduleddeparturetime, vals.actualdeparturetime, vals.ontimestatus,
-                vals.vehicle);
-    """, data)
-    conn.commit()
+                ON (ccc_arrival_times2.date = vals.date AND
+                    ccc_arrival_times2.route = vals.route AND
+                    ccc_arrival_times2.blockid = vals.blockid AND
+                    ccc_arrival_times2.stop = vals.stop)
+                WHEN MATCHED THEN
+                    UPDATE SET
+                    scheduledarrivaltime = vals.scheduledarrivaltime,
+                    actualarrivaltime = vals.actualarrivaltime,
+                    scheduleddeparturetime = vals.scheduleddeparturetime,
+                    actualdeparturetime = vals.actualdeparturetime,
+                    ontimestatus = vals.ontimestatus,
+                    vehicle = vals.vehicle
+                WHEN NOT MATCHED THEN
+                    INSERT (date, route, stop, blockid, scheduledarrivaltime, actualarrivaltime, scheduleddeparturetime,
+                        actualdeparturetime, ontimestatus, vehicle)
+                    VALUES (vals.date, vals.route, vals.stop, vals.blockid, vals.scheduledarrivaltime,
+                        vals.actualarrivaltime, vals.scheduleddeparturetime, vals.actualdeparturetime, vals.ontimestatus,
+                        vals.vehicle);
+            """, data)
+            cursor.commit()
 
 
 def date_range(start_date, end_date):
