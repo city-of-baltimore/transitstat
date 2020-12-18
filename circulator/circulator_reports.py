@@ -34,8 +34,8 @@ def update_database(start_date, end_date):
     logging.info("Processing %s to %s", start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y'))
     rs_cls = Reports(RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD)
 
-    data = []
     for search_date in date_range(start_date, end_date):
+        data = []
         for row in rs_cls.get_otp(search_date, search_date):
             data.append((row['date'], row['route'], row['stop'], row['blockid'], row['scheduledarrivaltime'],
                          row['actualarrivaltime'], row['scheduleddeparturetime'], row['actualdeparturetime'],
@@ -56,7 +56,6 @@ def update_database(start_date, end_date):
                     ccc_arrival_times.scheduleddeparturetime = vals.scheduleddeparturetime)
                 WHEN MATCHED THEN
                     UPDATE SET
-                    ,
                     actualarrivaltime = vals.actualarrivaltime,
                     actualdeparturetime = vals.actualdeparturetime,
                     ontimestatus = vals.ontimestatus,
