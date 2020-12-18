@@ -14,7 +14,7 @@ CREATE TABLE [dbo].[ccc_arrival_times](
 )
 """
 import logging
-from datetime import timedelta
+from datetime import date, timedelta
 
 import pyodbc  # type: ignore
 from ridesystems.reports import Reports
@@ -29,12 +29,12 @@ conn = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_
 cursor = conn.cursor()
 
 
-def update_database(start_date, end_date):
+def update_database(start_date: date, end_date: date) -> None:
     """Gets the data from the ride systems scraper and puts it in the database"""
     logging.info("Processing %s to %s", start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y'))
     rs_cls = Reports(RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD)
 
-    for search_date in date_range(start_date, end_date):
+    for search_date in [start_date + timedelta(i) for i in range((end_date - start_date).days)]:
         data = []
         for row in rs_cls.get_otp(search_date, search_date):
             data.append((row['date'], row['route'], row['stop'], row['blockid'], row['scheduledarrivaltime'],
@@ -68,9 +68,3 @@ def update_database(start_date, end_date):
                         vals.vehicle);
             """, data)
             cursor.commit()
-
-
-def date_range(start_date, end_date):
-    """Helper to iterate over dates"""
-    for i in range(int((end_date - start_date).days)):
-        yield start_date + timedelta(i)

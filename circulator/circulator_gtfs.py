@@ -3,6 +3,7 @@ Imports the GTFS.zip file into the database
 """
 import csv
 
+from typing import Union
 import pyodbc  # type: ignore
 
 from ridesystems.api import API
@@ -12,13 +13,11 @@ CONN = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_
 CURSOR = CONN.cursor()
 
 
-def insert_calendar(data_file, recreate_table=False):
+def insert_calendar(data_file: Union[str, bytes], recreate_table: bool = False) -> None:  # pylint:disable=unsubscriptable-object ; https://github.com/PyCQA/pylint/issues/3882
     """
     service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date
-
     :param data_file:
     :param recreate_table:
-    :return:
     """
     if recreate_table:
         try:
@@ -44,7 +43,7 @@ def insert_calendar(data_file, recreate_table=False):
     _insert(data_file, "ccc_gtfs_calendar")
 
 
-def insert_routes(data_file, recreate_table=False):
+def insert_routes(data_file: Union[str, bytes], recreate_table: bool = False):  # pylint:disable=unsubscriptable-object ; https://github.com/PyCQA/pylint/issues/3882
     """
     route_id,route_short_name,route_long_name,route_desc,route_type,route_color
 
@@ -72,7 +71,7 @@ def insert_routes(data_file, recreate_table=False):
     _insert(data_file, "ccc_gtfs_routes")
 
 
-def insert_stop_times(data_file, recreate_table=False):
+def insert_stop_times(data_file: Union[str, bytes], recreate_table=False) -> None:  # pylint:disable=unsubscriptable-object ; https://github.com/PyCQA/pylint/issues/3882
     """
     trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type
 
@@ -102,7 +101,7 @@ def insert_stop_times(data_file, recreate_table=False):
     _insert(data_file, "ccc_gtfs_stop_times")
 
 
-def insert_stops(data_file, recreate_table=False):
+def insert_stops(data_file: Union[str, bytes], recreate_table: bool = False):  # pylint:disable=unsubscriptable-object ; https://github.com/PyCQA/pylint/issues/3882
     """
     stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,stop_url,location_type,parent_station
 
@@ -136,8 +135,8 @@ def insert_stops(data_file, recreate_table=False):
     # Because ridesystems is awful, and can't use a single RouteStopID (or even only two, or three... there are at least
     # FOUR!!), we have to do this absolutely awful hack here to figure out what they might mean
     rs_interface = API(RIDESYSTEMS_API_KEY)
-    dumb_stoplist = rs_interface.get_stops('4') + rs_interface.get_stops('10') + rs_interface.get_stops('12') + \
-        rs_interface.get_stops('13')
+    dumb_stoplist = rs_interface.get_stops(4) + rs_interface.get_stops(10) + rs_interface.get_stops(12) + \
+        rs_interface.get_stops(13)
     dumb_routestopids = {i['RouteStopID']: [i['Description'], i['Latitude'], i['Longitude'], i['RouteID']]
                          for i in dumb_stoplist}
 
@@ -177,7 +176,7 @@ def insert_stops(data_file, recreate_table=False):
         CURSOR.commit()
 
 
-def get_route_from_stop(stop_id):
+def get_route_from_stop(stop_id: int) -> int:
     """
     Takes the GTFS stop_id value and gets the route_id
     :param stop_id: (int) The stop_id from GTFS
@@ -193,11 +192,11 @@ def get_route_from_stop(stop_id):
     return res[0][3]
 
 
-def insert_trips(data_file, recreate_table=False):
+def insert_trips(data_file: Union[str, bytes], recreate_table: bool = False) -> None:  # pylint:disable=unsubscriptable-object ; https://github.com/PyCQA/pylint/issues/3882
     """
     route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id
 
-    :param data_file: (str) Path to the file to insert into the table
+    :param data_file: Path to the file to insert into the table
     :param recreate_table: (bool) If the table exists, then drop it and recreate it
     :return: None
     """
@@ -225,11 +224,11 @@ def insert_trips(data_file, recreate_table=False):
     _insert(data_file, "ccc_gtfs_trips")
 
 
-def _insert(data_file, table_name):
+def _insert(data_file: Union[str, bytes], table_name: str) -> None:  # pylint:disable=unsubscriptable-object ; https://github.com/PyCQA/pylint/issues/3882
     """
-
-    :param data_file:
-    :param table_name:
+    Insert a comma separated value file into a table. Expects the first row to be the columns.
+    :param data_file: Path to file to read
+    :param table_name: Table to insert data into. Should have columns that match the first row of data_file
     :return:
     """
     with open(data_file) as csv_file:
