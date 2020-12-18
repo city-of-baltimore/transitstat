@@ -1,16 +1,12 @@
 """
 Imports the GTFS.zip file into the database
 """
-import argparse
 import csv
-import os
-import tempfile
-import zipfile
 
 import pyodbc  # type: ignore
 
 from ridesystems.api import API
-from .creds import RIDESYSTEMS_API_KEY
+from circulator.creds import RIDESYSTEMS_API_KEY
 
 CONN = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_DATA;Trusted_Connection=yes;')
 CURSOR = CONN.cursor()
@@ -243,27 +239,3 @@ def _insert(data_file, table_name):
             table_name, ','.join(columns), ','.join('?' * len(columns)))
         CURSOR.executemany(query, reader)
         CURSOR.commit()
-
-
-def start_from_cmd_line():
-    """
-    Parse the args and start
-    """
-    parser = argparse.ArgumentParser(description='GTFS data importer')
-    parser.add_argument('-f', '--file', required=True, help='Zip file to import')
-    parser.add_argument('-r', '--recreate', action='store_true', help='Drop and recreate database tables')
-
-    args = parser.parse_args()
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with zipfile.ZipFile(args.file, 'r') as zip_ref:
-            zip_ref.extractall(tmpdir)
-            insert_stop_times(os.path.join(tmpdir, 'stop_times.txt'), args.recreate)
-            insert_trips(os.path.join(tmpdir, 'trips.txt'), args.recreate)
-            insert_calendar(os.path.join(tmpdir, 'calendar.txt'), args.recreate)
-            insert_routes(os.path.join(tmpdir, 'routes.txt'), args.recreate)
-            insert_stops(os.path.join(tmpdir, 'stops.txt'), args.recreate)
-
-
-if __name__ == '__main__':
-    start_from_cmd_line()

@@ -8,26 +8,18 @@ jobs:
         uses: actions/checkout@v2
       - name: Setup Python
         uses: actions/setup-python@v2
-      - name: Checkout ridesystems repo
-        uses: actions/checkout@v2
-        with:
-          repository: city-of-baltimore/ridesystems
-          path: ridesystems-repo
       - name: Install dependencies
         run: |
-          pip install --upgrade pip wheel pylint flake8 bandit mypy wheel
-          pip install --upgrade ./ridesystems-repo
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r requirements.txt
       - name: Lint with pylint
         run: |
-          dir
-          pylint python
+          pylint main_circulator.py main_connector.py circulator connector
       - name: Lint with flake8
         run : |
-          flake8 --config=.flake8 python
+          flake8 --config=.flake8 main_circulator.py main_connector.py circulator connector
       - name: Look for security issues with Bandit
         run: |
-          bandit python
+          bandit main_circulator.py main_connector.py circulator connector
       - name: Type checking
         run: |
-          mypy python
+          mypy main_circulator.py main_connector.py circulator connector
