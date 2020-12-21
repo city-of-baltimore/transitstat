@@ -19,7 +19,7 @@ from datetime import date, timedelta
 import pyodbc  # type: ignore
 from ridesystems.reports import Reports
 
-from circulator.creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
+from .creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
 
 logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
                     level=logging.INFO,

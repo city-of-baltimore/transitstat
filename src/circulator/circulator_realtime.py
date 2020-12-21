@@ -3,11 +3,11 @@ Tracks circulator activity on a real time basis by tracking start and stop times
 ccc_bus_runtimes
 busid  | starttime | endtime
 """
-import pyodbc  # type: ignore
 from typing import Dict
+import pyodbc  # type: ignore
 
 from ridesystems.api import API
-from circulator.creds import RIDESYSTEMS_API_KEY
+from .creds import RIDESYSTEMS_API_KEY
 
 ROUTE_ID = {1: 'Banner',
             2: 'Purple',
