@@ -12,10 +12,12 @@ import logging
 import math
 import os
 import re
-import traceback
+from collections import defaultdict
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd  # type: ignore
 from dateutil import parser
+from dateutil.parser import ParserError  # type: ignore  # https://github.com/python/typeshed/pull/4616
 import pyodbc  # type: ignore
 
 logging.basicConfig(
@@ -24,39 +26,44 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
 
+RidershipDict = Dict[str, int]
+ParsedDataDict = Dict[int, RidershipDict]
 
-def parse_sheets(path):
+
+def parse_sheets(path: str) -> ParsedDataDict:
     """
     Parse the specified file or directory for all of the ridership data in each of its sheets, and return a dictionary
     of values with date (yyyy-mm-dd) -> total ridership. If a directory is provided, then all xlsx files will be
     processed
 
     :param path: Path of the file or directory to parse
-    :type path: str
     :return ridership: (dict) The dates and ridership numbers of the Harbor Connector from parse_sheet()
     {<routeid> : {<date>, <ridership>, ...},
      ...
     }
     """
     logging.info("Processing %s", path)
-    if os.path.isdir(path):
-        ret = {}
-        for hc_file in glob.glob(os.path.join(path, 'HC* *-*.xlsx')):
-            route_id, ridership = _parse_sheets(hc_file)
-            ridership.update(ret.setdefault(route_id, {}))
+    ret: ParsedDataDict = defaultdict(dict)
+    file_list = glob.glob(os.path.join(path, 'HC* *-*.xlsx')) if os.path.isdir(path) else [path]
+
+    for hc_file in file_list:
+        parsed = _parse_sheets(hc_file)
+        if parsed:
+            route_id, ridership = parsed
+            ridership.update(ret[route_id])
             ret[route_id] = ridership
-        return ret
-    route_id, ridership = _parse_sheets(path)
-    return {route_id: ridership}
+    return ret
 
 
-def _parse_sheets(filename):
-    route_id = re.search(r'HC(\d*) \d{1,2}-\d{4}.xlsx', filename).group(1)
-    if not route_id.isdigit():
-        logging.error("Unable to get route from %s", filename)
+def _parse_sheets(filename: str) -> Optional[Tuple[int, Dict]]:  # pylint:disable=unsubscriptable-object ; https://github.com/PyCQA/pylint/issues/3882
+    filename_parse = re.search(r'HC(\d*) \d{1,2}-\d{4}.xlsx', filename)
+    if not filename_parse:
+        return None
+
+    route_id: int = int(filename_parse.group(1))
     sheets_dict = pd.read_excel(filename, sheet_name=None)
 
-    ridership = {}
+    ridership: RidershipDict = {}
 
     for _, sheet in sheets_dict.items():
         for _, row in sheet.iterrows():
@@ -64,9 +71,9 @@ def _parse_sheets(filename):
                 break
             try:
                 created_on = row['Created on'].replace('Thur', 'Thu')
-                rider_date = parser.parse(created_on).strftime('%Y-%m-%d')
-            except parser._parser.ParserError:  # pylint:disable=protected-access
-                logging.error("Parse failure. %s", traceback.format_exc())
+                rider_date: str = parser.parse(created_on).strftime('%Y-%m-%d')
+            except ParserError as err:
+                logging.error("Parse failure. %s", err)
                 continue
 
             if isinstance(row.get('Boarding'), str) and row.get('Boarding').isdigit():
@@ -81,7 +88,7 @@ def _parse_sheets(filename):
     return route_id, ridership
 
 
-def insert_into_db(parsed_data):
+def insert_into_db(parsed_data: ParsedDataDict) -> None:
     """
     Insert the ridership dictionary into the database
 
@@ -92,10 +99,11 @@ def insert_into_db(parsed_data):
     conn = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_DATA;Trusted_Connection=yes;')
     cursor = conn.cursor()
 
-    insert_array = []
+    insert_array: List[Tuple] = []
     for route_id, ridership in parsed_data.items():
         for date, riders in ridership.items():
             insert_array.append((route_id, date, riders, route_id, date, riders))
+
     cursor.executemany(("MERGE  "
                         "INTO hc_ridership WITH (HOLDLOCK) AS target "
                         "USING (SELECT "

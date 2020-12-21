@@ -3,10 +3,11 @@ Tracks circulator activity on a real time basis by tracking start and stop times
 ccc_bus_runtimes
 busid  | starttime | endtime
 """
+from typing import Dict
 import pyodbc  # type: ignore
 
 from ridesystems.api import API
-from circulator.creds import RIDESYSTEMS_API_KEY
+from .creds import RIDESYSTEMS_API_KEY
 
 ROUTE_ID = {1: 'Banner',
             2: 'Purple',
@@ -21,41 +22,36 @@ CONN = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_
 CURSOR = CONN.cursor()
 
 
-def get_active_buses():
+def get_active_buses() -> Dict[str, str]:
     """ Get the list of buses that were active the last time the script was run, and do no have an end time"""
     CURSOR.execute("SELECT busid, route FROM ccc_bus_runtimes WHERE endtime IS NULL")
     return {busid.strip(): route for (busid, route) in CURSOR.fetchall()}
 
 
-def log_active_bus(bus_id, route_id):
+def log_active_bus(bus_id: str, route_id: int) -> None:
     """
     Log a bus that is just starting its route
 
     :param bus_id: Bus identifier
-    :type bus_id: str
     :param route_id: Route identifier
-    :type route_id: str
-
-    :return: none
     """
     CURSOR.execute("INSERT INTO ccc_bus_runtimes (busid, starttime, route) VALUES (?, GETDATE(), ?)",
                    bus_id, ROUTE_ID[route_id])
     CURSOR.commit()
 
 
-def log_inactive_bus(bus_id):
+def log_inactive_bus(bus_id: str) -> None:
     """
     Log a bus that was active, and is no longer active
 
     :param bus_id: Bus identifier
     :type bus_id: str
-    :return: none
     """
     CURSOR.execute("UPDATE ccc_bus_runtimes SET endtime = GETDATE() WHERE busid = (?) AND endtime IS NULL", bus_id)
     CURSOR.commit()
 
 
-def process_vehicles():
+def process_vehicles() -> None:
     """Log the bus status in the database"""
     # Get list of open bus schedules
     active_buses = get_active_buses()
@@ -65,8 +61,8 @@ def process_vehicles():
         if not map_vehicle_point['IsOnRoute']:
             continue
 
-        bus_id = map_vehicle_point['Name']
-        route_id = map_vehicle_point['RouteID']
+        bus_id: str = map_vehicle_point['Name']
+        route_id: int = map_vehicle_point['RouteID']
 
         # it was already active, and is still active. Do nothing
         if bus_id in active_buses.keys():

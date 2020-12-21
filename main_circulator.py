@@ -6,9 +6,9 @@ import tempfile
 import zipfile
 from datetime import date, datetime, timedelta
 
-from circulator.circulator_realtime import process_vehicles
-from circulator.circulator_reports import update_database
-from circulator.circulator_gtfs import insert_stop_times, insert_trips, insert_calendar, insert_routes, insert_stops
+from src.circulator.circulator_realtime import process_vehicles
+from src.circulator.circulator_reports import update_database
+from src.circulator.circulator_gtfs import insert_stop_times, insert_trips, insert_calendar, insert_routes, insert_stops
 
 yesterday = date.today() - timedelta(days=1)
 parser = argparse.ArgumentParser(description="Driver for the transitstat scripts")

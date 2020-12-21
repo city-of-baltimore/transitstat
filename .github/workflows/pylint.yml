@@ -13,13 +13,16 @@ jobs:
           pip install -r requirements.txt
       - name: Lint with pylint
         run: |
-          pylint main_circulator.py main_connector.py circulator connector
+          pylint main_circulator.py main_connector.py src tests
       - name: Lint with flake8
         run : |
-          flake8 --config=.flake8 main_circulator.py main_connector.py circulator connector
+          flake8 --config=.flake8 main_circulator.py main_connector.py src tests
       - name: Look for security issues with Bandit
         run: |
-          bandit main_circulator.py main_connector.py circulator connector
+          bandit main_circulator.py main_connector.py src tests
       - name: Type checking
         run: |
-          mypy main_circulator.py main_connector.py circulator connector
+          mypy main_circulator.py main_connector.py src tests
+      - name: Pytest
+        run: |
+          pytest
