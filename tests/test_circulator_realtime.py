@@ -1,5 +1,5 @@
 """Test suite for circulator.circulator.realtime"""
-from transitstat.circulator import realtime
+# from transitstat.circulator import realtime
 
 
 def test_get_active_buses():

@@ -1,5 +1,5 @@
 """Test suite for circulator.circulator_gtfs"""
-from transitstat.circulator import import_gtfs
+# from transitstat.circulator import import_gtfs
 
 
 def test_insert_calendar():
