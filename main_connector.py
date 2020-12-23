@@ -1,6 +1,6 @@
 """Main driver for the transitstat scripts"""
 import argparse
-from src.connector.connector_import import parse_sheets, insert_into_db
+from src.transitstat.connector import parse_sheets, insert_into_db
 
 parser = argparse.ArgumentParser(description="Driver for the Harbor Connector scripts")
 
