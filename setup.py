@@ -14,6 +14,6 @@ setup(
     install_requires=[
         'pandas',
         'pyodbc',
-        'ridesystems',
+        'http://github.com/city-of-baltimore/Ridesystems#egg=ridesystems',
     ]
 )
