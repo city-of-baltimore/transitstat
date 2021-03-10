@@ -8,23 +8,17 @@ CREATE TABLE [dbo].[hc_ridership](
 )
 """
 import glob
-import logging
 import math
 import os
 import re
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
+from loguru import logger
 import pandas as pd  # type: ignore
 from dateutil import parser
 from dateutil.parser import ParserError  # type: ignore  # https://github.com/python/typeshed/pull/4616
 import pyodbc  # type: ignore
-
-logging.basicConfig(
-    filename='ridership_connector.log',
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
 
 RidershipDict = Dict[str, int]
 ParsedDataDict = Dict[int, RidershipDict]
@@ -42,7 +36,7 @@ def parse_sheets(path: str) -> ParsedDataDict:
      ...
     }
     """
-    logging.info("Processing %s", path)
+    logger.info("Processing {}", path)
     ret: ParsedDataDict = defaultdict(dict)
     file_list = glob.glob(os.path.join(path, 'HC* *-*.xlsx')) if os.path.isdir(path) else [path]
 
@@ -73,7 +67,7 @@ def _parse_sheets(filename: str) -> Optional[Tuple[int, Dict]]:  # pylint:disabl
                 created_on = row['Created on'].replace('Thur', 'Thu')
                 rider_date: str = parser.parse(created_on).strftime('%Y-%m-%d')
             except ParserError as err:
-                logging.error("Parse failure. %s", err)
+                logger.error("Parse failure. {}", err)
                 continue
 
             if isinstance(row.get('Boarding'), str) and row.get('Boarding').isdigit():
@@ -84,7 +78,7 @@ def _parse_sheets(filename: str) -> Optional[Tuple[int, Dict]]:  # pylint:disabl
                 boarding = 0
             ridership[rider_date] = ridership.setdefault(rider_date, 0) + boarding
 
-    logging.info("Route id: %s, ridership: %s", route_id, ridership)
+    logger.info("Route id: {}, ridership: {}", route_id, ridership)
     return route_id, ridership
 
 

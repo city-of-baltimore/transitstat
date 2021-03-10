@@ -12,8 +12,10 @@ setup(
     package_data={'transitstat': ['py.typed'], },
     package_dir={'': 'src'},
     install_requires=[
-        'pandas',
-        'pyodbc',
-        'ridesystems @ git+git://github.com/city-of-baltimore/Ridesystems#egg=ridesystems',
+        'pandas~=1.2.3',
+        'pyodbc~=4.0.30',
+        'loguru~=0.5.3',
+        'python-dateutil~=2.8.1',
+        'ridesystems @ git+git://github.com/city-of-baltimore/Ridesystems@v1.0.0#egg=ridesystems',
     ]
 )

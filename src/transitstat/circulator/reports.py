@@ -13,17 +13,13 @@ CREATE TABLE [dbo].[ccc_arrival_times](
     [vehicle] [varchar](50) NULL
 )
 """
-import logging
 from datetime import date, timedelta
 
 import pyodbc  # type: ignore
+from loguru import logger
 from ridesystems.reports import Reports
 
 from .creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
-
-logging.basicConfig(format='%(asctime)s %(levelname)-8s %(message)s',
-                    level=logging.INFO,
-                    datefmt='%Y-%m-%d %H:%M:%S')
 
 conn = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_DATA;Trusted_Connection=yes;')
 cursor = conn.cursor()
@@ -31,7 +27,7 @@ cursor = conn.cursor()
 
 def update_database(start_date: date, end_date: date) -> None:
     """Gets the data from the ride systems scraper and puts it in the database"""
-    logging.info("Processing %s to %s", start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y'))
+    logger.info("Processing {} to {}", start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y'))
     rs_cls = Reports(RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD)
 
     for search_date in [start_date + timedelta(i) for i in range((end_date - start_date).days)]:
