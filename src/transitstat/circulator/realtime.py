@@ -6,6 +6,7 @@ busid  | starttime | endtime
 from typing import Dict
 import pyodbc  # type: ignore
 
+from loguru import logger
 from ridesystems.api import API
 from .creds import RIDESYSTEMS_API_KEY
 
@@ -35,6 +36,7 @@ def log_active_bus(bus_id: str, route_id: int) -> None:
     :param bus_id: Bus identifier
     :param route_id: Route identifier
     """
+    logger.debug('Bus became ACTIVE: {} :: {}', route_id, bus_id)
     CURSOR.execute("INSERT INTO ccc_bus_runtimes (busid, starttime, route) VALUES (?, GETDATE(), ?)",
                    bus_id, ROUTE_ID[route_id])
     CURSOR.commit()
@@ -47,6 +49,7 @@ def log_inactive_bus(bus_id: str) -> None:
     :param bus_id: Bus identifier
     :type bus_id: str
     """
+    logger.debug('Bus became INACTIVE: {}', bus_id)
     CURSOR.execute("UPDATE ccc_bus_runtimes SET endtime = GETDATE() WHERE busid = (?) AND endtime IS NULL", bus_id)
     CURSOR.commit()
 
@@ -54,11 +57,15 @@ def log_inactive_bus(bus_id: str) -> None:
 def process_vehicles() -> None:
     """Log the bus status in the database"""
     # Get list of open bus schedules
+    logger.info('Processing vehicles')
     active_buses = get_active_buses()
 
     rs_interface = API(RIDESYSTEMS_API_KEY)
     for map_vehicle_point in rs_interface.get_map_vehicle_points():
+        logger.debug('Processing {}', map_vehicle_point)
+
         if not map_vehicle_point['IsOnRoute']:
+            logger.debug('Vehicle not on route')
             continue
 
         bus_id: str = map_vehicle_point['Name']
@@ -67,6 +74,7 @@ def process_vehicles() -> None:
         # it was already active, and is still active. Do nothing
         if bus_id in active_buses.keys():
             if active_buses[bus_id] != ROUTE_ID[route_id]:
+                logger.debug('Bus id {} switched from route {} to {}', bus_id, active_buses[bus_id], ROUTE_ID[route_id])
                 log_inactive_bus(bus_id)
                 log_active_bus(bus_id, route_id)
 
