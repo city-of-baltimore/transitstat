@@ -6,8 +6,8 @@ import tempfile
 import zipfile
 from datetime import date, datetime, timedelta
 
-from src.transitstat.circulator import process_vehicles
-from src.transitstat.circulator import update_database
+from src.transitstat.circulator.realtime import process_vehicles
+from src.transitstat.circulator.reports import update_database
 from src.transitstat.circulator.import_gtfs import insert_stop_times, insert_trips, insert_calendar, insert_routes, insert_stops
 
 yesterday = date.today() - timedelta(days=1)
