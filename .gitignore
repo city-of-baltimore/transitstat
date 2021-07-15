@@ -183,3 +183,4 @@ dmypy.json
 
 # virtual environments
 venv*/
+/.venv-transitstat/

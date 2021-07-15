@@ -1,5 +1,4 @@
 """Test suite for connector.connector_import"""
-from transitstat.connector import data_import
 
 
 def test_parse_sheets():
