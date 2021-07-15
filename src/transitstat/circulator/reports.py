@@ -15,6 +15,7 @@ CREATE TABLE [dbo].[ccc_arrival_times](
 """
 from datetime import date, timedelta
 
+import pandas as pd  # type: ignore
 import pyodbc  # type: ignore
 from loguru import logger
 from ridesystems.reports import Reports
@@ -32,10 +33,14 @@ def update_database(start_date: date, end_date: date) -> None:
 
     for search_date in [start_date + timedelta(i) for i in range((end_date - start_date).days)]:
         data = []
-        for row in rs_cls.get_otp(search_date, search_date):
+        for _, row in rs_cls.get_otp(search_date, search_date).iterrows():
+            actualarrivaltime = row['actualarrivaltime'] if row['actualarrivaltime'] is not pd.NaT else None
+            actualdeparturetime = row['actualdeparturetime'] if row['actualdeparturetime'] is not pd.NaT else None
+            vehicle = row['actualarrivaltime'] if row['actualarrivaltime'] == 'nan' else None
+
             data.append((row['date'], row['route'], row['stop'], row['blockid'], row['scheduledarrivaltime'],
-                         row['actualarrivaltime'], row['scheduleddeparturetime'], row['actualdeparturetime'],
-                         row['ontimestatus'], row['vehicle']))
+                         actualarrivaltime, row['scheduleddeparturetime'], actualdeparturetime, row['ontimestatus'],
+                         vehicle))
 
         if data:
             cursor.executemany("""

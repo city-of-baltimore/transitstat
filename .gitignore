@@ -154,7 +154,7 @@ celerybeat.pid
 
 # Environments
 .env
-.venv
+.venv*/
 env/
 venv/
 ENV/
@@ -183,3 +183,4 @@ dmypy.json
 
 # virtual environments
 venv*/
+/.venv-transitstat/

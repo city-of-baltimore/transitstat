@@ -13,7 +13,7 @@ CONN = pyodbc.connect(r'Driver={SQL Server};Server=balt-sql311-prd;Database=DOT_
 CURSOR = CONN.cursor()
 
 
-def insert_calendar(data_file: Union[str, bytes], recreate_table: bool = False) -> None:  # pylint:disable=unsubscriptable-object,line-too-long  # noqa:E501 ; https://github.com/PyCQA/pylint/issues/3882
+def insert_calendar(data_file: Union[str, bytes], recreate_table: bool = False) -> None:
     """
     service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date
     :param data_file:
@@ -43,7 +43,7 @@ def insert_calendar(data_file: Union[str, bytes], recreate_table: bool = False) 
     _insert(data_file, "ccc_gtfs_calendar")
 
 
-def insert_routes(data_file: Union[str, bytes], recreate_table: bool = False):  # pylint:disable=unsubscriptable-object,line-too-long  # noqa:E501 ; https://github.com/PyCQA/pylint/issues/3882
+def insert_routes(data_file: Union[str, bytes], recreate_table: bool = False):
     """
     route_id,route_short_name,route_long_name,route_desc,route_type,route_color
 
@@ -71,7 +71,7 @@ def insert_routes(data_file: Union[str, bytes], recreate_table: bool = False):  
     _insert(data_file, "ccc_gtfs_routes")
 
 
-def insert_stop_times(data_file: Union[str, bytes], recreate_table=False) -> None:  # pylint:disable=unsubscriptable-object,line-too-long  # noqa:E501 ; https://github.com/PyCQA/pylint/issues/3882
+def insert_stop_times(data_file: Union[str, bytes], recreate_table=False) -> None:
     """
     trip_id,arrival_time,departure_time,stop_id,stop_sequence,stop_headsign,pickup_type,drop_off_type
 
@@ -101,7 +101,7 @@ def insert_stop_times(data_file: Union[str, bytes], recreate_table=False) -> Non
     _insert(data_file, "ccc_gtfs_stop_times")
 
 
-def insert_stops(data_file: Union[str, bytes], recreate_table: bool = False):  # pylint:disable=unsubscriptable-object,line-too-long  # noqa:E501 ; https://github.com/PyCQA/pylint/issues/3882
+def insert_stops(data_file: Union[str, bytes], recreate_table: bool = False):
     """
     stop_id,stop_code,stop_name,stop_desc,stop_lat,stop_lon,stop_url,location_type,parent_station
 
@@ -192,7 +192,7 @@ def get_route_from_stop(stop_id: int) -> int:
     return res[0][3]
 
 
-def insert_trips(data_file: Union[str, bytes], recreate_table: bool = False) -> None:  # pylint:disable=unsubscriptable-object,line-too-long  # noqa:E501 ; https://github.com/PyCQA/pylint/issues/3882
+def insert_trips(data_file: Union[str, bytes], recreate_table: bool = False) -> None:
     """
     route_id,service_id,trip_id,trip_headsign,trip_short_name,direction_id,block_id,shape_id
 
@@ -224,7 +224,7 @@ def insert_trips(data_file: Union[str, bytes], recreate_table: bool = False) -> 
     _insert(data_file, "ccc_gtfs_trips")
 
 
-def _insert(data_file: Union[str, bytes], table_name: str) -> None:  # pylint:disable=unsubscriptable-object,line-too-long  # noqa:E501 ; https://github.com/PyCQA/pylint/issues/3882
+def _insert(data_file: Union[str, bytes], table_name: str) -> None:
     """
     Insert a comma separated value file into a table. Expects the first row to be the columns.
     :param data_file: Path to file to read
