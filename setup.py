@@ -17,8 +17,8 @@ setup(
         'loguru~=0.5.3',
         'python-dateutil~=2.8.2',
         'tenacity~=8.0.1',
-        'sqlalchemy~=1.4.20',
+        'sqlalchemy~=1.4.21',
         'openpyxl~=3.0.7',
-        'ridesystems @ git+https://github.com/city-of-baltimore/Ridesystems@v2.0.1#egg=ridesystems',
+        'ridesystems~=2.0.3',
     ]
 )
