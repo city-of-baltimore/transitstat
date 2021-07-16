@@ -11,4 +11,4 @@ jobs:
       - name: Tox
         run: |
             pip install tox
-            tox
+            tox -- --ridesystem-user '${{ secrets.RIDESYSTEMS_USERNAME }}' --ridesystems-pass '${{ secrets.RIDESYSTEMS_PASSWORD }}'
