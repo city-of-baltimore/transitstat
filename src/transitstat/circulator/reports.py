@@ -12,7 +12,8 @@ from .schema import CirculatorArrival
 from .._merge import insert_or_update
 
 
-def get_otp(start_date: date, end_date: date, conn_str: str, force: bool = False) -> None:
+def get_otp(start_date: date, end_date: date, conn_str: str,  # pylint:disable=too-many-locals
+            force: bool = False) -> None:
     """
     Gets the data from the ride systems scraper and puts it in the database
 
@@ -21,7 +22,6 @@ def get_otp(start_date: date, end_date: date, conn_str: str, force: bool = False
     :param conn_str: Database connection string
     :param force: Regenerate the data for the date range. By default, it skips dates with existing data.
     """
-    import pdb;pdb.set_trace()
     logger.info("Processing bus arrivals: {} to {}", start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y'))
     rs_cls = Reports(RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD)
 

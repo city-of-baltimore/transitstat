@@ -4,7 +4,7 @@ import os
 import sys
 import tempfile
 import zipfile
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 from loguru import logger
@@ -72,7 +72,7 @@ if args.subparser_name == 'realtime':
 # On time percentage
 if args.subparser_name == 'otp':
     if args.year and args.month and args.day and args.numofdays:
-        start_date = datetime(args.year, args.month, args.day)
+        start_date = date(args.year, args.month, args.day)
         end_date = start_date + timedelta(days=args.numofdays)
         get_otp(start_date, end_date, args.conn_str)
     elif args.year or args.month or args.day or args.numofdays:

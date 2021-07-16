@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='TransitStat',
+    name='transitstat',
     version='0.1',
     author="Brian Seel",
     author_email="brian.seel@baltimorecity.gov",

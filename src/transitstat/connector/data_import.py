@@ -64,7 +64,7 @@ def _parse_sheets(filename: str) -> Optional[Tuple[int, Dict]]:  # pylint:disabl
             if isinstance(row['Created on'], float) and math.isnan(row['Created on']):
                 break
             try:
-                created_on = row['Created on'].replace('Thur', 'Thu')
+                created_on = row['Created on'].replace('Thur', 'Thu').replace('(Eastern Daylight Time)', '(EDT)')
                 rider_date: str = parser.parse(created_on).strftime('%Y-%m-%d')
             except ParserError as err:
                 logger.error("Parse failure. {}", err)

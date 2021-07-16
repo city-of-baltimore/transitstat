@@ -1,11 +1,12 @@
 """Pytest fixtures"""
-import pytest
 from datetime import date, time
+
+import pytest
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
-from transitstat.circulator.schema import Base, CirculatorArrival  # type: ignore
-from transitstat.circulator.import_ridership import DataImporter  # type: ignore
+from transitstat.circulator.schema import Base, CirculatorArrival
+from transitstat.circulator.import_ridership import DataImporter
 
 
 @pytest.fixture(name='conn_str')
