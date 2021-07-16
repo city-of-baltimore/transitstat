@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session  # type: ignore
 from typing import Optional
 
 from .creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
-from .schema import CirculatorArrival
+from .schema import Base, CirculatorArrival
 from .._merge import insert_or_update
 
 
@@ -34,6 +34,8 @@ def get_otp(start_date: date, end_date: date, conn_str: str,  # pylint:disable=t
     rs_cls = Reports(rs_user, rs_pass)
 
     engine = create_engine(conn_str, echo=True, future=True)
+    with engine.begin() as connection:
+        Base.metadata.create_all(connection)
 
     with Session(bind=engine, future=True) as session:
         if not force:
