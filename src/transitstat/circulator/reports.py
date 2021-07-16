@@ -21,6 +21,7 @@ def get_otp(start_date: date, end_date: date, conn_str: str, force: bool = False
     :param conn_str: Database connection string
     :param force: Regenerate the data for the date range. By default, it skips dates with existing data.
     """
+    import pdb;pdb.set_trace()
     logger.info("Processing bus arrivals: {} to {}", start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y'))
     rs_cls = Reports(RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD)
 
@@ -28,7 +29,7 @@ def get_otp(start_date: date, end_date: date, conn_str: str, force: bool = False
 
     with Session(bind=engine, future=True) as session:
         if not force:
-            existing_dates = set(session.query(CirculatorArrival.date).all())
+            existing_dates = set(i[0] for i in session.query(CirculatorArrival.date).all())
         else:
             existing_dates = set()
 
