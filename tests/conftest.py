@@ -9,6 +9,23 @@ from transitstat.circulator.schema import Base, CirculatorArrival
 from transitstat.circulator.import_ridership import DataImporter
 
 
+def pytest_addoption(parser):
+    """Pytest custom arguments"""
+    parser.addoption('--ridesystems-user', action='store')
+    parser.addoption('--ridesystems-pass', action='store')
+
+
+@pytest.fixture(scope='session', name='ridesystems-user')
+def fixture_ridesystems_username(request):
+    """The username to login to Ridesystems"""
+    return request.config.getoption('--ridesystems-user')
+
+
+@pytest.fixture(scope='session', name='ridesystems_password')
+def fixture_ridesystem_password(request):
+    """The password to login to Ridesystems"""
+    return request.config.getoption('--ridesystems-pass')
+
 @pytest.fixture(name='conn_str')
 def fixture_conn_str(tmp_path_factory):
     """Fixture for the WorksheetMaker class"""
