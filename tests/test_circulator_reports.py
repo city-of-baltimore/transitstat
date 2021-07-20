@@ -8,9 +8,10 @@ from transitstat.circulator.reports import get_otp
 from transitstat.circulator.schema import CirculatorArrival
 
 
-def test_get_otp(conn_str):
+def test_get_otp(conn_str, ridesystems_user, ridesystems_password):
     """Test for get_otp"""
-    get_otp(date(2021, 6, 1), date(2021, 6, 1), conn_str=conn_str)
+    get_otp(date(2021, 6, 1), date(2021, 6, 1), conn_str=conn_str, rs_user=ridesystems_user,
+            rs_pass=ridesystems_password)
     engine = create_engine(conn_str, echo=True, future=True)
 
     with Session(bind=engine, future=True) as session:
@@ -18,9 +19,10 @@ def test_get_otp(conn_str):
         assert ret.count() > 100
 
 
-def test_get_otp_force(conn_str):
+def test_get_otp_force(conn_str, ridesystems_user, ridesystems_password):
     """Test for get_otp"""
-    get_otp(date(2021, 5, 1), date(2021, 5, 1), conn_str=conn_str, force=True)
+    get_otp(date(2021, 5, 1), date(2021, 5, 1), conn_str=conn_str, force=True, rs_user=ridesystems_user,
+            rs_pass=ridesystems_password)
     engine = create_engine(conn_str, echo=True, future=True)
 
     with Session(bind=engine, future=True) as session:
@@ -28,9 +30,10 @@ def test_get_otp_force(conn_str):
         assert ret.count() > 100
 
 
-def test_get_otp_no_force(conn_str):
+def test_get_otp_no_force(conn_str, ridesystems_user, ridesystems_password):
     """Test for get_otp"""
-    get_otp(date(2021, 5, 1), date(2021, 5, 1), conn_str=conn_str)
+    get_otp(date(2021, 5, 1), date(2021, 5, 1), conn_str=conn_str, rs_user=ridesystems_user,
+            rs_pass=ridesystems_password)
     engine = create_engine(conn_str, echo=True, future=True)
 
     with Session(bind=engine, future=True) as session:

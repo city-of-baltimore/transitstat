@@ -15,7 +15,7 @@ def pytest_addoption(parser):
     parser.addoption('--ridesystems-pass', action='store')
 
 
-@pytest.fixture(scope='session', name='ridesystems-user')
+@pytest.fixture(scope='session', name='ridesystems_user')
 def fixture_ridesystems_username(request):
     """The username to login to Ridesystems"""
     return request.config.getoption('--ridesystems-user')
