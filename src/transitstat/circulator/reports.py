@@ -1,19 +1,19 @@
 """ Driver for the ridesystems report scraper"""
 from datetime import date, timedelta
+from typing import Optional
 
 import pandas as pd  # type: ignore
 from loguru import logger
 from ridesystems.reports import Reports
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
-from typing import Optional
 
 from .creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
 from .schema import Base, CirculatorArrival
 from .._merge import insert_or_update
 
 
-def get_otp(start_date: date, end_date: date, conn_str: str,  # pylint:disable=too-many-locals
+def get_otp(start_date: date, end_date: date, conn_str: str,  # pylint:disable=too-many-locals, too-many-arguments
             force: bool = False, rs_user: Optional[str] = None, rs_pass: Optional[str] = None) -> None:
     """
     Gets the data from the ride systems scraper and puts it in the database
