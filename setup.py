@@ -12,13 +12,13 @@ setup(
     package_data={'transitstat': ['py.typed'], },
     package_dir={'': 'src'},
     install_requires=[
-        'pandas~=1.3.0',
-        'pyodbc~=4.0.31',
-        'loguru~=0.5.3',
-        'python-dateutil~=2.8.2',
-        'tenacity~=8.0.1',
-        'sqlalchemy~=1.4.21',
-        'openpyxl~=3.0.7',
-        'ridesystems~=2.0.4',
+        'pandas',
+        'pyodbc',
+        'loguru',
+        'python-dateutil',
+        'tenacity',
+        'sqlalchemy',
+        'openpyxl',
+        'ridesystems>=2.0.0',
     ]
 )

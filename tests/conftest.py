@@ -26,6 +26,7 @@ def fixture_ridesystem_password(request):
     """The password to login to Ridesystems"""
     return request.config.getoption('--ridesystems-pass')
 
+
 @pytest.fixture(name='conn_str')
 def fixture_conn_str(tmp_path_factory):
     """Fixture for the WorksheetMaker class"""
