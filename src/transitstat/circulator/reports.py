@@ -31,8 +31,8 @@ def get_otp(start_date: date, end_date: date, conn_str: str,  # pylint:disable=t
     if rs_pass is None:
         rs_pass = RIDESYSTEMS_PASSWORD
 
+    logger.info("usingusing{}and{}", rs_user, rs_pass)
     rs_cls = Reports(rs_user, rs_pass)
-    logger.info("using{}and{}", rs_user, rs_pass)
 
     engine = create_engine(conn_str, echo=True, future=True)
     with engine.begin() as connection:
