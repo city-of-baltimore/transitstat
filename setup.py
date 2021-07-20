@@ -19,6 +19,6 @@ setup(
         'tenacity~=8.0.1',
         'sqlalchemy~=1.4.21',
         'openpyxl~=3.0.7',
-        'ridesystems~=2.0.3',
+        'ridesystems~=2.0.4',
     ]
 )
