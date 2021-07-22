@@ -3,7 +3,7 @@
 from sqlalchemy import Column  # type: ignore
 from sqlalchemy.ext.declarative import DeclarativeMeta  # type: ignore
 from sqlalchemy.orm import declarative_base  # type: ignore
-from sqlalchemy.types import Date, Integer, String, Time  # type: ignore
+from sqlalchemy.types import Date, DateTime, Integer, String, Time  # type: ignore
 
 Base: DeclarativeMeta = declarative_base()
 
@@ -32,3 +32,13 @@ class CirculatorArrival(Base):
     actual_departure_time = Column(Time)
     on_time_status = Column(String(length=10))
     vehicle = Column(String(length=20))
+
+
+class CirculatorBusRuntimes(Base):
+    """Table holding the realtime runtimes of the circulator"""
+    __tablename__ = "ccc_bus_runtimes"
+
+    busid = Column(String(length=10), primary_key=True)
+    route = Column(String)
+    starttime = Column(DateTime, primary_key=True)
+    endtime = Column(DateTime)

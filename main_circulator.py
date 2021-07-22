@@ -12,8 +12,7 @@ from loguru import logger
 from src.transitstat.circulator.import_gtfs import insert_stop_times, insert_trips, insert_calendar, insert_routes, \
     insert_stops
 from src.transitstat.circulator.import_ridership import DataImporter
-from src.transitstat.circulator.realtime import process_vehicles
-from src.transitstat.circulator.reports import get_otp
+from src.transitstat.circulator.reports import RidesystemReports
 
 parser = argparse.ArgumentParser(description="Driver for the transitstat scripts")
 parser.add_argument('-v', '--verbose', action='store_true', help='Increased logging level')
@@ -22,8 +21,6 @@ parser.add_argument('-c', '--conn_str', help='Database connection string',
                     default='mssql+pyodbc://balt-sql311-prd/DOT_DATA?driver=ODBC Driver 17 for SQL Server')
 
 subparsers = parser.add_subparsers(dest='subparser_name', help='sub-command help')
-
-parser_realtime = subparsers.add_parser('realtime', help='Pulls realtime data about the bus locations')
 
 parser_otp = subparsers.add_parser('otp', help='Pulls the On Time Percentage report from RideSystems')
 parser_otp.add_argument('-m', '--month', type=int,
@@ -65,22 +62,19 @@ handlers = [
 
 logger.configure(handlers=handlers)
 
-# Realtime
-if args.subparser_name == 'realtime':
-    process_vehicles()
-
 # On time percentage
 if args.subparser_name == 'otp':
+    rs = RidesystemReports(args.conn_str)
     if args.year and args.month and args.day and args.numofdays:
         start_date = date(args.year, args.month, args.day)
         end_date = start_date + timedelta(days=args.numofdays)
-        get_otp(start_date, end_date, args.conn_str)
+        rs.get_otp(start_date, end_date)
     elif args.year or args.month or args.day or args.numofdays:
         logger.critical('If you specify a year/month/day/numofdays, then you must specify them all.')
     else:
         start_date = date(2020, 1, 1)
         end_date = date.today() - timedelta(days=1)
-        get_otp(start_date, end_date, args.conn_str)
+        rs.get_otp(start_date, end_date)
 
 # GTFS parsing
 if args.subparser_name == 'gtfs':
