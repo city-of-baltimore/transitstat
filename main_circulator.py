@@ -22,22 +22,31 @@ parser.add_argument('-c', '--conn_str', help='Database connection string',
 
 subparsers = parser.add_subparsers(dest='subparser_name', help='sub-command help')
 
+# Reports
+start_date = date(2020, 3, 1)
+end_date = date.today() - timedelta(days=1)
 parser_otp = subparsers.add_parser('otp', help='Pulls the On Time Percentage report from RideSystems')
-parser_otp.add_argument('-m', '--month', type=int,
-                        help='Optional: Month of date we should start searching on (IE: 10 for Oct).')
-parser_otp.add_argument('-d', '--day', type=int,
-                        help='Optional: Day of date we should start searching on (IE: 5).')
-parser_otp.add_argument('-y', '--year', type=int,
-                        help='Optional: Four digit year we should start searching on (IE: 2020).')
-parser_otp.add_argument('-n', '--numofdays', type=int,
-                        help='Optional: Number of days to search, including the start date.')
-parser_otp.add_argument('-o', '--force', action='store_true',
+parser_otp.add_argument('-s', '--startdate', type=date.fromisoformat, default=start_date,
+                        help='First date to process, inclusive')
+parser_otp.add_argument('-e', '--enddate', type=date.fromisoformat, default=end_date,
+                        help='Last date to process, inclusive.')
+parser_otp.add_argument('-f', '--force', action='store_true',
                         help='By default, it skips dates that already have data. This flag regenerates the date range.')
 
+parser_runtimes = subparsers.add_parser('runtimes', help='Pulls the bus runtimes report from RideSystems')
+parser_otp.add_argument('-s', '--startdate', type=date.fromisoformat, default=start_date,
+                        help='First date to process, inclusive')
+parser_otp.add_argument('-e', '--enddate', type=date.fromisoformat, default=end_date,
+                        help='Last date to process, inclusive.')
+parser_otp.add_argument('-f', '--force', action='store_true',
+                        help='By default, it skips dates that already have data. This flag regenerates the date range.')
+
+# GTFS
 parser_gtfs = subparsers.add_parser('gtfs', help='Updates the database with a GTFS file from RideSystems')
 parser_gtfs.add_argument('-f', '--file', required=True, help='Zip file to import')
 parser_gtfs.add_argument('-r', '--recreate', action='store_true', help='Drop and recreate database tables')
 
+# Import harbor connector file
 parser_import = subparsers.add_parser('import', help='Imports ridership data from a standard XLSX file')
 parser_import.add_argument('-f', '--file', help='File to import')
 parser_import.add_argument('-d', '--dir', help='Directory to process that contains XLSX files with ridership data')
@@ -61,20 +70,15 @@ handlers = [
 ]
 
 logger.configure(handlers=handlers)
+rs = RidesystemReports(args.conn_str)
 
 # On time percentage
 if args.subparser_name == 'otp':
-    rs = RidesystemReports(args.conn_str)
-    if args.year and args.month and args.day and args.numofdays:
-        start_date = date(args.year, args.month, args.day)
-        end_date = start_date + timedelta(days=args.numofdays)
-        rs.get_otp(start_date, end_date)
-    elif args.year or args.month or args.day or args.numofdays:
-        logger.critical('If you specify a year/month/day/numofdays, then you must specify them all.')
-    else:
-        start_date = date(2020, 1, 1)
-        end_date = date.today() - timedelta(days=1)
-        rs.get_otp(start_date, end_date)
+    rs.get_otp(args.start_date, args.end_date)
+
+# Bus runtimes
+if args.subparser_name == 'runtimes':
+    rs.get_vehicle_assignments(args.start_date, args.end_date)
 
 # GTFS parsing
 if args.subparser_name == 'gtfs':
