@@ -5,7 +5,7 @@ from pathlib import Path
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
-from transitstat.circulator.schema import CirculatorRidership  # type: ignore
+from transitstat.circulator.schema import CirculatorRidershipXLS  # type: ignore
 
 
 def test_import_ridership_file(dataimporter):
@@ -14,7 +14,7 @@ def test_import_ridership_file(dataimporter):
 
     engine = create_engine(dataimporter.conn_str, echo=True, future=True)
     with Session(bind=engine, future=True) as session:
-        ret = session.query(CirculatorRidership).all()
+        ret = session.query(CirculatorRidershipXLS).all()
         assert len(ret) == 480
 
 
@@ -32,5 +32,5 @@ def test_import_ridership_dir(dataimporter, tmp_path_factory):
 
     engine = create_engine(dataimporter.conn_str, echo=True, future=True)
     with Session(bind=engine, future=True) as session:
-        ret = session.query(CirculatorRidership).all()
+        ret = session.query(CirculatorRidershipXLS).all()
         assert len(ret) == 748

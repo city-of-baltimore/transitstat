@@ -5,9 +5,9 @@ import pytest
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
-from transitstat.circulator.schema import Base, CirculatorArrival, CirculatorBusRuntimes
 from transitstat.circulator.import_ridership import DataImporter
 from transitstat.circulator.reports import RidesystemReports
+from transitstat.circulator.schema import Base, CirculatorArrival, CirculatorBusRuntimes, CirculatorRidership
 
 
 def pytest_addoption(parser):
@@ -38,38 +38,91 @@ def fixture_conn_str(tmp_path_factory):
 
     with Session(bind=engine) as session:
         session.add_all([
-            CirculatorArrival(date=date(2021, 5, 1),
-                              route='xx',
-                              block_id='xx',
-                              scheduled_arrival_time=time()),
-            CirculatorArrival(date=date(2021, 5, 2),
-                              route='xx',
-                              block_id='xx',
-                              scheduled_arrival_time=time()),
-            CirculatorArrival(date=date(2021, 5, 3),
-                              route='xx',
-                              block_id='xx',
-                              scheduled_arrival_time=time()),
-            CirculatorArrival(date=date(2021, 5, 4),
-                              route='xx',
-                              block_id='xx',
-                              scheduled_arrival_time=time()),
-            CirculatorBusRuntimes(busid='Purple',
-                                  route='xx',
-                                  starttime=datetime(2021, 5, 1, 12, 0),
-                                  endtime=datetime(2021, 5, 1, 12, 0)),
-            CirculatorBusRuntimes(busid='Purple',
-                                  route='xx',
-                                  starttime=datetime(2021, 5, 2, 12, 0),
-                                  endtime=datetime(2021, 5, 2, 12, 0)),
-            CirculatorBusRuntimes(busid='Purple',
-                                  route='xx',
-                                  starttime=datetime(2021, 5, 3, 12, 0),
-                                  endtime=datetime(2021, 5, 3, 12, 0)),
-            CirculatorBusRuntimes(busid='Purple',
-                                  route='xx',
-                                  starttime=datetime(2021, 5, 4, 12, 0),
-                                  endtime=datetime(2021, 5, 4, 12, 0))
+            # Circulator Arrival
+            CirculatorArrival(
+                date=date(2021, 5, 1),
+                route='xx',
+                block_id='xx',
+                scheduled_arrival_time=time()),
+            CirculatorArrival(
+                date=date(2021, 5, 2),
+                route='xx',
+                block_id='xx',
+                scheduled_arrival_time=time()),
+            CirculatorArrival(
+                date=date(2021, 5, 3),
+                route='xx',
+                block_id='xx',
+                scheduled_arrival_time=time()),
+            CirculatorArrival(
+                date=date(2021, 5, 4),
+                route='xx',
+                block_id='xx',
+                scheduled_arrival_time=time()),
+
+            # Circulator Bus Runtimes
+            CirculatorBusRuntimes(
+                busid='Purple',
+                route='xx',
+                starttime=datetime(2021, 5, 1, 12, 0),
+                endtime=datetime(2021, 5, 1, 12, 0)),
+            CirculatorBusRuntimes(
+                busid='Purple',
+                route='xx',
+                starttime=datetime(2021, 5, 2, 12, 0),
+                endtime=datetime(2021, 5, 2, 12, 0)),
+            CirculatorBusRuntimes(
+                busid='Purple',
+                route='xx',
+                starttime=datetime(2021, 5, 3, 12, 0),
+                endtime=datetime(2021, 5, 3, 12, 0)),
+            CirculatorBusRuntimes(
+                busid='Purple',
+                route='xx',
+                starttime=datetime(2021, 5, 4, 12, 0),
+                endtime=datetime(2021, 5, 4, 12, 0)),
+
+            # Circulator Ridership
+            CirculatorRidership(
+                vehicle='xx1',
+                route='xx1',
+                stop='xx1',
+                latitude=123.456789,
+                longitude=123.456789,
+                datetime=datetime(2021, 5, 1, 12, 0),
+                boardings=30,
+                alightings=30
+            ),
+            CirculatorRidership(
+                vehicle='xx2',
+                route='xx2',
+                stop='xx2',
+                latitude=123.456789,
+                longitude=123.456789,
+                datetime=datetime(2021, 5, 2, 12, 0),
+                boardings=30,
+                alightings=30
+            ),
+            CirculatorRidership(
+                vehicle='xx3',
+                route='xx3',
+                stop='xx3',
+                latitude=123.456789,
+                longitude=123.456789,
+                datetime=datetime(2021, 5, 3, 12, 0),
+                boardings=30,
+                alightings=30
+            ),
+            CirculatorRidership(
+                vehicle='xx4',
+                route='xx4',
+                stop='xx4',
+                latitude=123.456789,
+                longitude=123.456789,
+                datetime=datetime(2021, 5, 4, 12, 0),
+                boardings=30,
+                alightings=30
+            ),
         ])
 
         session.commit()
