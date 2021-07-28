@@ -34,12 +34,13 @@ parser_otp.add_argument('-f', '--force', action='store_true',
                         help='By default, it skips dates that already have data. This flag regenerates the date range.')
 
 parser_runtimes = subparsers.add_parser('runtimes', help='Pulls the bus runtimes report from RideSystems')
-parser_otp.add_argument('-s', '--startdate', type=date.fromisoformat, default=start_date,
-                        help='First date to process, inclusive')
-parser_otp.add_argument('-e', '--enddate', type=date.fromisoformat, default=end_date,
-                        help='Last date to process, inclusive.')
-parser_otp.add_argument('-f', '--force', action='store_true',
-                        help='By default, it skips dates that already have data. This flag regenerates the date range.')
+parser_runtimes.add_argument('-s', '--startdate', type=date.fromisoformat, default=start_date,
+                             help='First date to process, inclusive')
+parser_runtimes.add_argument('-e', '--enddate', type=date.fromisoformat, default=end_date,
+                             help='Last date to process, inclusive.')
+parser_runtimes.add_argument('-f', '--force', action='store_true',
+                             help='By default, it skips dates that already have data. This flag regenerates the date '
+                                  'range.')
 
 # GTFS
 parser_gtfs = subparsers.add_parser('gtfs', help='Updates the database with a GTFS file from RideSystems')
@@ -74,11 +75,11 @@ rs = RidesystemReports(args.conn_str)
 
 # On time percentage
 if args.subparser_name == 'otp':
-    rs.get_otp(args.start_date, args.end_date)
+    rs.get_otp(args.startdate, args.enddate)
 
 # Bus runtimes
 if args.subparser_name == 'runtimes':
-    rs.get_vehicle_assignments(args.start_date, args.end_date)
+    rs.get_vehicle_assignments(args.startdate, args.enddate)
 
 # GTFS parsing
 if args.subparser_name == 'gtfs':

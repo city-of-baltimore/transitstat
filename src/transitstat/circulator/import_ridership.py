@@ -11,7 +11,7 @@ import pandas as pd  # type: ignore
 from loguru import logger
 from sqlalchemy import create_engine  # type: ignore
 
-from .schema import Base, CirculatorRidership
+from .schema import Base, CirculatorRidershipXLS
 from .._merge import insert_or_update
 
 
@@ -73,10 +73,10 @@ class DataImporter:  # pylint:disable=too-few-public-methods
                             continue
 
                         if isinstance(row[bus_date], (int, float)):
-                            insert_or_update(CirculatorRidership(ridership_date=bus_date.date(),
-                                                                 route=row['Route'],
-                                                                 block_id=re.sub('[^0-9]', '', row['Block']),
-                                                                 riders=row[bus_date]), self.engine)
+                            insert_or_update(CirculatorRidershipXLS(ridership_date=bus_date.date(),
+                                                                    route=row['Route'],
+                                                                    block_id=re.sub('[^0-9]', '', row['Block']),
+                                                                    riders=row[bus_date]), self.engine)
         return True
 
     @staticmethod

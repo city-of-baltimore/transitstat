@@ -3,14 +3,14 @@
 from sqlalchemy import Column  # type: ignore
 from sqlalchemy.ext.declarative import DeclarativeMeta  # type: ignore
 from sqlalchemy.orm import declarative_base  # type: ignore
-from sqlalchemy.types import Date, DateTime, Integer, String, Time  # type: ignore
+from sqlalchemy.types import Date, DateTime, Integer, Numeric, String, Time  # type: ignore
 
 Base: DeclarativeMeta = declarative_base()
 
 
-class CirculatorRidership(Base):
+class CirculatorRidershipXLS(Base):
     """Table holding the ridership by vehicle, route and date"""
-    __tablename__ = "ccc_aggregate_ridership_manual"
+    __tablename__ = 'ccc_aggregate_ridership_manual'
 
     ridership_date = Column(Date, primary_key=True)
     route = Column(String(length=10), primary_key=True)
@@ -20,7 +20,7 @@ class CirculatorRidership(Base):
 
 class CirculatorArrival(Base):
     """Table holding circulator arrival times and on time status"""
-    __tablename__ = "ccc_arrival_times"
+    __tablename__ = 'ccc_arrival_times'
 
     date = Column(Date, primary_key=True)
     route = Column(String(length=50), primary_key=True)
@@ -36,9 +36,23 @@ class CirculatorArrival(Base):
 
 class CirculatorBusRuntimes(Base):
     """Table holding the realtime runtimes of the circulator"""
-    __tablename__ = "ccc_bus_runtimes"
+    __tablename__ = 'ccc_bus_runtimes'
 
     busid = Column(String(length=10), primary_key=True)
     route = Column(String)
     starttime = Column(DateTime, primary_key=True)
     endtime = Column(DateTime)
+
+
+class CirculatorRidership(Base):
+    """Table holding the ridership data for the circulator"""
+    __tablename__ = 'ccc_ridership'
+
+    vehicle = Column(String, primary_key=True)
+    route = Column(String, primary_key=True)
+    stop = Column(String, primary_key=True)
+    latitude = Column(Numeric(precision=9, scale=6))
+    longitude = Column(Numeric(precision=9, scale=6))
+    datetime = Column(DateTime, primary_key=True)
+    boardings = Column(Integer)
+    alightings = Column(Integer)
