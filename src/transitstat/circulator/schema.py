@@ -48,9 +48,9 @@ class CirculatorRidership(Base):
     """Table holding the ridership data for the circulator"""
     __tablename__ = 'ccc_ridership'
 
-    vehicle = Column(String, primary_key=True)
-    route = Column(String, primary_key=True)
-    stop = Column(String, primary_key=True)
+    vehicle = Column(String(length=15), primary_key=True)
+    route = Column(String(length=20), primary_key=True)
+    stop = Column(String(length=70), primary_key=True)
     latitude = Column(Numeric(precision=9, scale=6))
     longitude = Column(Numeric(precision=9, scale=6))
     datetime = Column(DateTime, primary_key=True)
