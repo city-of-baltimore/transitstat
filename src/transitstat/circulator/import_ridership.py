@@ -2,6 +2,7 @@
 import os
 import re
 import shutil
+import sys
 from datetime import datetime
 from math import isnan
 from pathlib import Path
@@ -11,6 +12,7 @@ import pandas as pd  # type: ignore
 from loguru import logger
 from sqlalchemy import create_engine  # type: ignore
 
+from .args import setup_logging, setup_parser
 from .schema import Base, CirculatorRidershipXLS
 from .._merge import insert_or_update
 
@@ -105,3 +107,28 @@ class DataImporter:  # pylint:disable=too-few-public-methods
 
         logger.error('Error moving file. It will not be moved to the processed directory: {}', file_name)
         return False
+
+
+def parse_args(args):
+    """Handles argument parsing"""
+    parser = setup_parser('Imports ridership data from a standard XLSX file')
+
+    # Import harbor connector file
+    parser.add_argument('-f', '--file', help='File to import')
+    parser.add_argument('-d', '--dir', help='Directory to process that contains XLSX files with ridership data')
+
+    return parser.parse_args(args)
+
+
+if __name__ == '__main__':
+    parsed_args = parse_args(sys.argv[1:])
+    setup_logging(parsed_args.debug, parsed_args.verbose)
+
+    # Import ridership
+    if parsed_args.subparser_name == 'import':
+        di = DataImporter(parsed_args.conn_str)
+        if parsed_args.file:
+            di.import_ridership(file=Path(parsed_args.file))
+
+        if parsed_args.dir:
+            di.import_ridership(directory=Path(parsed_args.dir))

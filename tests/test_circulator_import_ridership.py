@@ -6,6 +6,7 @@ from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
 from transitstat.circulator.schema import CirculatorRidershipXLS  # type: ignore
+from transitstat.circulator.import_ridership import parse_args
 
 
 def test_import_ridership_file(dataimporter):
@@ -34,3 +35,16 @@ def test_import_ridership_dir(dataimporter, tmp_path_factory):
     with Session(bind=engine, future=True) as session:
         ret = session.query(CirculatorRidershipXLS).all()
         assert len(ret) == 748
+
+
+def test_parse_args():
+    """Test argument parsing"""
+    file_str = 'thisfile'
+    dir_str = 'thisdir'
+    conn_str = 'thisconnstr'
+    args = parse_args(['-f', file_str, '-d', dir_str, '-c', conn_str, '-vv'])
+    assert args.file == file_str
+    assert args.dir == dir_str
+    assert args.conn_str == conn_str
+    assert args.debug
+    assert not args.verbose

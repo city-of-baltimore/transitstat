@@ -1,4 +1,5 @@
 """Test suite for circulator.circulator_gtfs"""
+from transitstat.circulator.import_gtfs import parse_args
 
 
 def test_insert_calendar():
@@ -27,3 +28,11 @@ def test_insert_trips():
 
 def test_insert():
     """Test for _insert"""
+
+
+def test_parse_args():
+    """Test parse_args"""
+    file_str = 'filestr'
+    args = parse_args(['-f', file_str, '-r'])
+    assert args.recreate
+    assert args.file == file_str
