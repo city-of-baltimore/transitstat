@@ -1,4 +1,5 @@
 """ Driver for the ridesystems report scraper"""
+import sys
 from datetime import date, datetime, timedelta
 from typing import Optional, Union
 
@@ -10,6 +11,7 @@ from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
 from .creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
+from .args import setup_logging, setup_parser
 from .schema import Base, CirculatorArrival, CirculatorBusRuntimes, CirculatorRidership
 from .._merge import insert_or_update
 
@@ -138,3 +140,60 @@ class RidesystemReports:
             dates_to_process.sort(reverse=True)
 
             return dates_to_process
+
+
+def parse_args(args):
+    """Handles argument parsing"""
+    parser = setup_parser()
+    subparsers = parser.add_subparsers(dest='subparser_name', help='sub-command help')
+
+    # On time percentage
+    start_date = date(2020, 3, 1)
+    end_date = date.today() - timedelta(days=1)
+    parser_otp = subparsers.add_parser('otp', help='Pulls the On Time Percentage report from RideSystems')
+
+    parser_otp.add_argument('-s', '--startdate', type=date.fromisoformat, default=start_date,
+                            help='First date to process, inclusive (format YYYY-MM-DD).')
+    parser_otp.add_argument('-e', '--enddate', type=date.fromisoformat, default=end_date,
+                            help='Last date to process, inclusive (format YYYY-MM-DD).')
+    parser_otp.add_argument('-f', '--force', action='store_true',
+                            help='By default, it skips dates that already have data. This flag regenerates the date '
+                                 'range.')
+
+    parser_runtimes = subparsers.add_parser('runtimes', help='Pulls the bus runtimes report from RideSystems')
+    parser_runtimes.add_argument('-s', '--startdate', type=date.fromisoformat, default=start_date,
+                                 help='First date to process, inclusive (format YYYY-MM-DD).')
+    parser_runtimes.add_argument('-e', '--enddate', type=date.fromisoformat, default=end_date,
+                                 help='Last date to process, inclusive (format YYYY-MM-DD).')
+    parser_runtimes.add_argument('-f', '--force', action='store_true',
+                                 help='By default, it skips dates that already have data. This flag regenerates the '
+                                      'date range.')
+
+    parser_runtimes = subparsers.add_parser('ridership', help='Pulls the ridership report from RideSystems')
+    parser_runtimes.add_argument('-s', '--startdate', type=date.fromisoformat, default=start_date,
+                                 help='First date to process, inclusive (format YYYY-MM-DD).')
+    parser_runtimes.add_argument('-e', '--enddate', type=date.fromisoformat, default=end_date,
+                                 help='Last date to process, inclusive (format YYYY-MM-DD).')
+    parser_runtimes.add_argument('-f', '--force', action='store_true',
+                                 help='By default, it skips dates that already have data. This flag regenerates the '
+                                      'date range.')
+
+    return parser.parse_args(args)
+
+
+if __name__ == '__main__':
+    parsed_args = parse_args(sys.argv[1:])
+    setup_logging(parsed_args.debug, parsed_args.verbose)
+    rs = RidesystemReports(parsed_args.conn_str)
+
+    # On time percentage
+    if parsed_args.subparser_name == 'otp':
+        rs.get_otp(parsed_args.startdate, parsed_args.enddate, parsed_args.force)
+
+    # Bus runtimes
+    if parsed_args.subparser_name == 'runtimes':
+        rs.get_vehicle_assignments(parsed_args.startdate, parsed_args.enddate, parsed_args.force)
+
+    # Ridership
+    if parsed_args.subparser_name == 'ridership':
+        rs.get_ridership(parsed_args.startdate, parsed_args.enddate, parsed_args.force)

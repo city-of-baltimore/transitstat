@@ -4,6 +4,7 @@ from datetime import date
 from sqlalchemy.orm import Session  # type: ignore
 
 from transitstat.circulator.schema import CirculatorArrival, CirculatorBusRuntimes, CirculatorRidership
+from transitstat.circulator.reports import parse_args
 
 
 def test_get_otp(ridesystems_reports):
@@ -98,3 +99,35 @@ def test_get_dates_to_process(ridesystems_reports):
     dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
                                                      CirculatorArrival.date, force=True)
     assert len(dates) == 4
+
+
+def test_parse_args():
+    """Test parse_args"""
+    conn_str = 'conn_str'
+    start_date_str = '2021-07-20'
+    start_date = date(2021, 7, 20)
+    end_date_str = '2021-07-21'
+    end_date = date(2021, 7, 21)
+    args = parse_args(['-v', '-c', conn_str, 'otp', '-s', start_date_str, '-e', end_date_str, '-f'])
+    assert args.verbose
+    assert not args.debug
+    assert args.conn_str == conn_str
+    assert args.startdate == start_date
+    assert args.enddate == end_date
+    assert args.force
+
+    args = parse_args(['-vv', '-c', conn_str, 'runtimes', '-s', start_date_str, '-e', end_date_str])
+    assert not args.verbose
+    assert args.debug
+    assert args.conn_str == conn_str
+    assert args.startdate == start_date
+    assert args.enddate == end_date
+    assert not args.force
+
+    args = parse_args(['-vv', '-c', conn_str, 'ridership', '-s', start_date_str, '-e', end_date_str])
+    assert not args.verbose
+    assert args.debug
+    assert args.conn_str == conn_str
+    assert args.startdate == start_date
+    assert args.enddate == end_date
+    assert not args.force

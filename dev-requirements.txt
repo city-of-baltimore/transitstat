@@ -1,12 +1,12 @@
-pip~=21.1.3
-wheel~=0.36.2
-pylint~=2.9.3
-flake8~=3.9.2
-bandit~=1.7.0
-mypy~=0.910
-pytest~=6.2.4
-pytest-cov~=2.12.1
-setuptools~=54.2.0
-typing~=3.7.4.3
+pip
+wheel
+pylint
+flake8
+bandit
+mypy
+pytest
+pytest-cov
+setuptools
+typing
 
-types-python-dateutil~=0.1.4
+types-python-dateutil

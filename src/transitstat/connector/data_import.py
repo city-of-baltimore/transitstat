@@ -7,10 +7,12 @@ CREATE TABLE [dbo].[hc_ridership](
     [riders] [int] NOT NULL
 )
 """
+import argparse
 import glob
 import math
 import os
 import re
+import sys
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
@@ -113,3 +115,18 @@ def insert_into_db(parsed_data: ParsedDataDict) -> None:
                         "THEN INSERT (route_id, [date], riders) "
                         "VALUES (?, ?, ?);"), insert_array)
     cursor.commit()
+
+
+def parse_args(args):
+    """Handles argument parsing"""
+    prsr = argparse.ArgumentParser(description="Driver for the Harbor Connector scripts")
+
+    prsr.add_argument('-p', '--path',
+                      help='File or directory to import. If directory is provided, then all files will be processed')
+
+    return prsr.parse_args(args)
+
+
+if __name__ == '__main__':
+    parsed_args = parse_args(sys.argv[1:])
+    insert_into_db(parse_sheets(parsed_args.path))
