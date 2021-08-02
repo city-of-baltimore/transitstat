@@ -53,7 +53,7 @@ class RidesystemReports:
             for _, row in self.rs_cls.get_otp(search_date, search_date, **kwargs).iterrows():
                 actualarrivaltime = row['actualarrivaltime'] if row['actualarrivaltime'] is not pd.NaT else None
                 actualdeparturetime = row['actualdeparturetime'] if row['actualdeparturetime'] is not pd.NaT else None
-                vehicle = row['actualarrivaltime'] if row['actualarrivaltime'] == 'nan' else None
+                vehicle = row['vehicle'] if not pd.isnull(row['vehicle']) else None
 
                 insert_or_update(CirculatorArrival(
                     date=row['date'],
