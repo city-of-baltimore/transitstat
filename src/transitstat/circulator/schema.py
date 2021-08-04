@@ -12,10 +12,10 @@ class CirculatorRidershipXLS(Base):
     """Table holding the ridership by vehicle, route and date"""
     __tablename__ = 'ccc_aggregate_ridership_manual'
 
-    ridership_date = Column(Date, primary_key=True)
-    route = Column(String(length=10), primary_key=True)
-    block_id = Column(Integer, primary_key=True)
-    riders = Column(Integer)
+    RidershipDate = Column(Date, primary_key=True)
+    Route = Column(String(length=10), primary_key=True)
+    BlockID = Column(Integer, primary_key=True)
+    Riders = Column(Integer)
 
 
 class CirculatorArrival(Base):

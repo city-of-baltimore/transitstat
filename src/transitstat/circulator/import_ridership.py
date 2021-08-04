@@ -75,10 +75,10 @@ class DataImporter:  # pylint:disable=too-few-public-methods
                             continue
 
                         if isinstance(row[bus_date], (int, float)):
-                            insert_or_update(CirculatorRidershipXLS(ridership_date=bus_date.date(),
-                                                                    route=row['Route'],
-                                                                    block_id=re.sub('[^0-9]', '', row['Block']),
-                                                                    riders=row[bus_date]), self.engine)
+                            insert_or_update(CirculatorRidershipXLS(RidershipDate=bus_date.date(),
+                                                                    Route=row['Route'],
+                                                                    BlockID=int(re.sub('[^0-9]', '', row['Block'])),
+                                                                    Riders=int(row[bus_date])), self.engine)
         return True
 
     @staticmethod
@@ -125,10 +125,9 @@ if __name__ == '__main__':
     setup_logging(parsed_args.debug, parsed_args.verbose)
 
     # Import ridership
-    if parsed_args.subparser_name == 'import':
-        di = DataImporter(parsed_args.conn_str)
-        if parsed_args.file:
-            di.import_ridership(file=Path(parsed_args.file))
+    di = DataImporter(parsed_args.conn_str)
+    if parsed_args.file:
+        di.import_ridership(file=Path(parsed_args.file))
 
-        if parsed_args.dir:
-            di.import_ridership(directory=Path(parsed_args.dir))
+    if parsed_args.dir:
+        di.import_ridership(directory=Path(parsed_args.dir))
