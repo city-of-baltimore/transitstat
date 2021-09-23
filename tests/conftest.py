@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session  # type: ignore
 from transitstat.circulator.import_ridership import DataImporter
 from transitstat.circulator.reports import RidesystemReports
 from transitstat.circulator.schema import Base, CirculatorArrival, CirculatorBusRuntimes, CirculatorRidership
+from transitstat.connector.data_import import ConnectorImport
 
 
 def pytest_addoption(parser):
@@ -31,7 +32,7 @@ def fixture_ridesystem_password(request):
 @pytest.fixture(name='conn_str')
 def fixture_conn_str(tmp_path_factory):
     """Fixture for the WorksheetMaker class"""
-    conn_str = 'sqlite:///{}'.format(str(tmp_path_factory.mktemp("data") / 'transitstat.db'))
+    conn_str = f"sqlite:///{str(tmp_path_factory.mktemp('data') / 'transitstat.db')}"
     engine = create_engine(conn_str, echo=True, future=True)
     with engine.begin() as connection:
         Base.metadata.create_all(connection)
@@ -133,6 +134,12 @@ def fixture_conn_str(tmp_path_factory):
 def fixture_dataimporter(conn_str):
     """transitstat.circulator.import_ridership.DataImporter fixture"""
     return DataImporter(conn_str)
+
+
+@pytest.fixture(name='connector_import')
+def fixture_connector_import(conn_str):
+    """transitstat.connector.data_import.ConnectorImport"""
+    return ConnectorImport(conn_str)
 
 
 @pytest.fixture(name='ridesystems_reports')

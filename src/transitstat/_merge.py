@@ -17,7 +17,7 @@ def insert_or_update(insert_obj: DeclarativeMeta, engine: engine_type, identity_
     """
     session = Session(bind=engine, future=True)
     if identity_insert:
-        session.execute(text('SET IDENTITY_INSERT {} ON'.format(insert_obj.__tablename__)))
+        session.execute(text(f'SET IDENTITY_INSERT {insert_obj.__tablename__} ON'))
 
     session.add(insert_obj)
     try:
@@ -56,9 +56,9 @@ def insert_or_update(insert_obj: DeclarativeMeta, engine: engine_type, identity_
                     logger.error('Unable to insert object: {}\nError: {}', insert_obj, update_err)
 
         else:
-            raise AssertionError('Expected error 2627 or "UNIQUE constraint failed". Got {}'.format(insert_err)) \
+            raise AssertionError(f'Expected error 2627 or "UNIQUE constraint failed". Got {insert_err}') \
                 from insert_err
     finally:
         if identity_insert:
-            session.execute(text('SET IDENTITY_INSERT {} OFF'.format(insert_obj.__tablename__)))
+            session.execute(text(f'SET IDENTITY_INSERT {insert_obj.__tablename__} OFF'))
         session.close()

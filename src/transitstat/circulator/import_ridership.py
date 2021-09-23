@@ -12,7 +12,7 @@ import pandas as pd  # type: ignore
 from loguru import logger
 from sqlalchemy import create_engine  # type: ignore
 
-from .args import setup_logging, setup_parser
+from transitstat.args import setup_logging, setup_parser
 from .schema import Base, CirculatorRidershipXLS
 from .._merge import insert_or_update
 
@@ -99,7 +99,7 @@ class DataImporter:  # pylint:disable=too-few-public-methods
         i = 1
         while i < 6:
             # retry copy operation up to 5 times
-            dst_filename = '{}_{}'.format(os.path.join(processed_dir, os.path.basename(file_name)), i)
+            dst_filename = f'{os.path.join(processed_dir, os.path.basename(file_name))}_{i}'
             if not os.path.exists(os.path.join(processed_dir, dst_filename)):
                 shutil.move(file_name, dst_filename)
                 return True

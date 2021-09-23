@@ -11,7 +11,7 @@ from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
 from .creds import RIDESYSTEMS_USERNAME, RIDESYSTEMS_PASSWORD
-from .args import setup_logging, setup_parser
+from ..args import setup_logging, setup_parser
 from .schema import Base, CirculatorArrival, CirculatorBusRuntimes, CirculatorRidership
 from .._merge import insert_or_update
 
@@ -96,7 +96,7 @@ class RidesystemReports:
         :param force: Regenerate the data for the date range. By default, it skips dates with existing data.
         """
         logger.info("Processing ridership: {} to {}", start_date.strftime('%m/%d/%y'), end_date.strftime('%m/%d/%y'))
-        dates_to_process = self.get_dates_to_process(start_date, end_date, CirculatorBusRuntimes.starttime, force)
+        dates_to_process = self.get_dates_to_process(start_date, end_date, CirculatorRidership.datetime, force)
         for search_date in dates_to_process:
             logger.info('Processing {}', search_date)
             for _, row in self.rs_cls.get_ridership(search_date, search_date).iterrows():
@@ -128,7 +128,7 @@ class RidesystemReports:
                     pass
             if isinstance(dte, date):
                 return dte
-            raise AssertionError("Unknown type of date: {}".format(dte))
+            raise AssertionError(f'Unknown type of date: {dte}')
         with Session(bind=self.engine, future=True) as session:
             if not force:
                 existing_dates = set(_convert_to_date(i[0]) for i in session.query(column).all())
