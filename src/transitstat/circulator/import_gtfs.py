@@ -233,7 +233,7 @@ class ImportGtfs:
         :param table_name: Table to insert data into. Should have columns that match the first row of data_file
         :return:
         """
-        with open(data_file) as csv_file:
+        with open(data_file, encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file)
             columns = next(reader)
             query = f"insert into {table_name}({','.join(columns)}) values ({','.join('?' * len(columns))})"
