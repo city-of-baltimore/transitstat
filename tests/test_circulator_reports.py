@@ -36,7 +36,7 @@ def test_get_vehicle_assignments(ridesystems_reports):
     ridesystems_reports.get_vehicle_assignments(date(2021, 6, 1), date(2021, 6, 1))
     with Session(bind=ridesystems_reports.engine, future=True) as session:
         ret = session.query(CirculatorBusRuntimes)
-        assert ret.count() == 23
+        assert ret.count() == 19
 
 
 def test_get_vehicle_assignments_force(ridesystems_reports):

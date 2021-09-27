@@ -57,12 +57,18 @@ class ConnectorImport:
 
     @staticmethod
     def _parse_sheets(filename: Path) -> Optional[Tuple[int, Dict]]:
+        def _count_converter(val):
+            val = int(val)
+            if math.isnan(val):
+                return 0
+            return val
+
         filename_parse = re.search(r'HC(\d*) \d{1,2}-\d{4}.xlsx', str(filename))
         if not filename_parse:
             return None
 
         route_id: int = int(filename_parse.group(1))
-        sheets_dict = pd.read_excel(filename, sheet_name=None, skiprows=[-1],
+        sheets_dict = pd.read_excel(filename, sheet_name=None, converters={'Count': _count_converter},
                                     dtype={'Created on': date,
                                            'Count': int,
                                            'Boarding': int,
@@ -120,4 +126,4 @@ if __name__ == '__main__':
     _args = parse_args(sys.argv[1:])
     setup_logging(_args.debug, _args.verbose)
     clss = ConnectorImport(_args.conn_str)
-    clss.insert_into_db(clss.parse_sheets(_args.path))
+    clss.insert_into_db(clss.parse_sheets(Path(_args.path)))

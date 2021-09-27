@@ -5,4 +5,4 @@ loguru~=0.5.3
 tenacity~=8.0.1
 sqlalchemy~=1.4.25
 openpyxl~=3.0.9
-ridesystems~=2.0.8
+ridesystems~=2.0.9
