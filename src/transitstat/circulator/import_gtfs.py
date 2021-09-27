@@ -11,7 +11,7 @@ from typing import Union
 import pyodbc  # type: ignore
 from ridesystems.api import API
 
-from .args import setup_logging, setup_parser
+from transitstat.args import setup_logging, setup_parser
 from .creds import RIDESYSTEMS_API_KEY
 
 
@@ -162,19 +162,17 @@ class ImportGtfs:
                 dumb_routeid_guess = {abs(dumb_routedata[1] - float(i[1])) + abs(dumb_routedata[2] - float(i[2])): i[0]
                                       for i in dumb_stopids}
 
-                print("MULTIPLES - name: {}\nLat/Long: {}/{}\nRouteids: {}\nDifferences: {}\nGuessed: {}\n\n".format(
-                    dumb_routedata[0],
-                    dumb_routedata[1],
-                    dumb_routedata[2],
-                    dumb_stopids,
-                    dumb_routeid_guess,
-                    dumb_routeid_guess[min(dumb_routeid_guess.keys())]))
+                print(f'MULTIPLES - name: {dumb_routedata[0]}'
+                      f'Lat/Long: {dumb_routedata[1]}/{dumb_routedata[2]}'
+                      f'Routeids: {dumb_stopids}'
+                      f'Differences: {dumb_routeid_guess}'
+                      f'Guessed: {dumb_routeid_guess[min(dumb_routeid_guess.keys())]}\n\n')
                 dumb_stopids = dumb_routeid_guess[min(dumb_routeid_guess.keys())]
 
             elif len(dumb_stopids) == 1:
                 dumb_stopids = dumb_stopids[0][0]
             else:
-                print("No results for {}".format(dumb_routedata[0]))
+                print(f'No results for {dumb_routedata[0]}')
                 continue
 
             self.cursor.execute("""UPDATE ccc_gtfs_stops SET dumb_stop_id = ? WHERE stop_id = ?""",
@@ -235,11 +233,10 @@ class ImportGtfs:
         :param table_name: Table to insert data into. Should have columns that match the first row of data_file
         :return:
         """
-        with open(data_file) as csv_file:
+        with open(data_file, encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file)
             columns = next(reader)
-            query = 'insert into {0}({1}) values ({2})'.format(
-                table_name, ','.join(columns), ','.join('?' * len(columns)))
+            query = f"insert into {table_name}({','.join(columns)}) values ({','.join('?' * len(columns))})"
             self.cursor.executemany(query, reader)
             self.cursor.commit()
 
