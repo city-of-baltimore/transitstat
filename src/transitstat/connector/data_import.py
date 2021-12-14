@@ -58,7 +58,11 @@ class ConnectorImport:
     @staticmethod
     def _parse_sheets(filename: Path) -> Optional[Tuple[int, Dict]]:
         def _count_converter(val):
-            val = int(val)
+            try:
+                val = int(val)
+            except ValueError:
+                return 0
+
             if math.isnan(val):
                 return 0
             return val
@@ -68,10 +72,9 @@ class ConnectorImport:
             return None
 
         route_id: int = int(filename_parse.group(1))
-        sheets_dict = pd.read_excel(filename, sheet_name=None, converters={'Count': _count_converter},
+        sheets_dict = pd.read_excel(filename, sheet_name=None,
+                                    converters={'Count': _count_converter, 'Boarding': _count_converter},
                                     dtype={'Created on': date,
-                                           'Count': int,
-                                           'Boarding': int,
                                            'DepartureLanding': str})
         ridership: RidershipDict = {}
 
@@ -80,7 +83,10 @@ class ConnectorImport:
                 if isinstance(row['Created on'], float) and math.isnan(row['Created on']):
                     break
                 try:
-                    created_on = row['Created on'].replace('Thur', 'Thu').replace('(Eastern Daylight Time)', '(EDT)')
+                    created_on = row['Created on']\
+                        .replace('Thur', 'Thu')\
+                        .replace('(Eastern Daylight Time)', '(EDT)')\
+                        .replace('(Eastern Standard Time)', '(EST)')
                     rider_date: date = date_parser.parse(created_on).date()
                 except ParserError as err:
                     logger.error('Parse failure. {}', err)
