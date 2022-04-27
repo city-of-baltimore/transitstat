@@ -73,29 +73,27 @@ class ConnectorImport:
 
         route_id: int = int(filename_parse.group(1))
         sheets_dict = pd.read_excel(filename, sheet_name=None,
-                                    converters={'Count': _count_converter, 'Boarding': _count_converter},
-                                    dtype={'Created on': date,
-                                           'DepartureLanding': str})
+                                    converters={'Count': _count_converter, 'Boardings': _count_converter},
+                                    dtype={'Date': str,
+                                           'Depart Location': str,
+                                           'Boardings': int})
         ridership: RidershipDict = {}
 
         for _, sheet in sheets_dict.items():
             for _, row in sheet.iterrows():
-                if isinstance(row['Created on'], float) and math.isnan(row['Created on']):
+                if isinstance(row['Date'], float) and math.isnan(row['Date']):
                     break
                 try:
-                    created_on = row['Created on']\
-                        .replace('Thur', 'Thu')\
-                        .replace('(Eastern Daylight Time)', '(EDT)')\
-                        .replace('(Eastern Standard Time)', '(EST)')
+                    created_on = row['Date']
                     rider_date: date = date_parser.parse(created_on).date()
                 except ParserError as err:
                     logger.error('Parse failure. {}', err)
                     continue
 
-                if isinstance(row.get('Boarding'), str) and row.get('Boarding').isdigit():
-                    boarding = int(row.get('Boarding'))
-                elif isinstance(row.get('Boarding'), (int, float)) and not math.isnan(row.get('Boarding')):
-                    boarding = int(row.get('Boarding'))
+                if isinstance(row.get('Boardings'), str) and row.get('Boardings').isdigit():
+                    boarding = int(row.get('Boardings'))
+                elif isinstance(row.get('Boardings'), (int, float)) and not math.isnan(row.get('Boardings')):
+                    boarding = int(row.get('Boardings'))
                 else:
                     boarding = 0
                 ridership[rider_date] = ridership.setdefault(rider_date, 0) + boarding
