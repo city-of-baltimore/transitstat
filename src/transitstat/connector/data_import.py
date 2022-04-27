@@ -85,9 +85,6 @@ class ConnectorImport:
                     break
                 try:
                     created_on = row['Date']
-                    # .replace('Thur', 'Thu')\
-                    # .replace('(Eastern Daylight Time)', '(EDT)')\
-                    # .replace('(Eastern Standard Time)', '(EST)')
                     rider_date: date = date_parser.parse(created_on).date()
                 except ParserError as err:
                     logger.error('Parse failure. {}', err)
