@@ -9,6 +9,7 @@ from transitstat.circulator.import_ridership import DataImporter
 from transitstat.circulator.reports import RidesystemReports
 from transitstat.circulator.schema import Base, CirculatorArrival, CirculatorBusRuntimes, CirculatorRidership
 from transitstat.connector.data_import import ConnectorImport
+from . import common
 
 
 def pytest_addoption(parser):
@@ -146,3 +147,13 @@ def fixture_connector_import(conn_str):
 def fixture_ridesystems_reports(conn_str, ridesystems_user, ridesystems_password):
     """transitstat.circulator.reports.RidesystemsReports fixture"""
     return RidesystemReports(conn_str, ridesystems_user, ridesystems_password)
+
+@pytest.fixture(name='fakeSession')
+def fixture_factory(tmp_path_factory):
+    """Fixture for the WorksheetMaker class"""
+    conn_str = f"sqlite:///{str(tmp_path_factory.mktemp('data') / 'transitstat.db')}"
+    engine = create_engine(conn_str, echo=True, future=True)
+    common.Session.configure(bind=engine)
+    with engine.begin() as connection:
+        Base.metadata.create_all(connection)
+    return common.Session()
