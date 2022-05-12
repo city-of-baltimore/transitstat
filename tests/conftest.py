@@ -148,7 +148,7 @@ def fixture_ridesystems_reports(conn_str, ridesystems_user, ridesystems_password
     """transitstat.circulator.reports.RidesystemsReports fixture"""
     return RidesystemReports(conn_str, ridesystems_user, ridesystems_password)
 
-@pytest.fixture(name='fakeSession')
+@pytest.fixture(name='fake_session')
 def fixture_factory(tmp_path_factory):
     """Fixture for the WorksheetMaker class"""
     conn_str = f"sqlite:///{str(tmp_path_factory.mktemp('data') / 'transitstat.db')}"
