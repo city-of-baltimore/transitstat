@@ -1,179 +1,237 @@
 """Test suites for circulator.circulator_reports"""
-from datetime import date, time, datetime
+from datetime import date
 from unittest.mock import patch
 
-import pandas as pd
+import pytest
+import pandas as pd  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
 from transitstat.circulator.schema import CirculatorArrival, CirculatorBusRuntimes, CirculatorRidership
 from transitstat.circulator.reports import parse_args, RidesystemReports
-from .factories import ArrivalFactory
 
 
-
-def test_factory(fake_session):
-    """Test for factory"""
-    ArrivalFactory()
-    ArrivalFactory(scheduled_arrival_time=time(12, 0))
-
-    assert fake_session.query(CirculatorArrival).count() == 2
-
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
 @patch('transitstat.circulator.reports.RideSystemsInterface')
-def test_get_otp_no_force(mocked_rs_cls, conn_str):
-    """Test for get_otp"""
-    test_df = {
-        'date': [date(2022, 1, 1), date(2022, 1, 1), date(2022, 1, 1), date(2022, 1, 1)],
-        'route': ['xx', 'xx', 'xx', 'xx'],
-        'stop': ['xx', 'xx', 'xx', 'xx'],
-        'blockid': ['xx', 'xx', 'xx', 'xx'],
-        'actualarrivaltime': [time(), time(), time(), time()],
-        'actualdeparturetime': [time(), time(), time(), time()],
-        'scheduledarrivaltime': [time(), time(1), time(2), time(3)],
-        'scheduleddeparturetime': [time(), time(), time(), time()],
-        'vehicle': ['xx', 'xx', 'xx', 'xx'],
-        'ontimestatus': ['xx', 'xx', 'xx', 'xx']
-        }
+def test_get_otp_no_force(mocked_rs_cls, conn_str, arrival_factory, arrival_dataset):
+    """Test for get_otp without force"""
 
-    inst = RidesystemReports(conn_str)
-    inst.rs_cls._login.return_value = "Login successful :)"
-    inst.rs_cls.get_otp.return_value = pd.DataFrame(test_df)
+    # arrival_factory.create_batch(100)
+    test_df = pd.DataFrame(data=arrival_dataset.create_batch(10))
+
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    inst.rs_cls.get_otp.return_value = test_df
+
+    with Session(bind=inst.engine, future=True) as session:
+        batch = arrival_factory.create_batch(100)
+        session.bulk_save_objects(batch)
+        session.commit()
 
     inst.get_otp(date(2022, 1, 1), date(2022, 1, 1), hours='12')
+    assert mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword') is None
+    assert inst.rs_cls.get_otp.assert_called_once_with(date(2022, 1, 1), date(2022, 1, 1), hours='12') is None  # pylint: disable=no-member
+
     with Session(bind=inst.engine, future=True) as session:
         ret = session.query(CirculatorArrival)
-        assert ret.count() == 8
+        assert ret.count() == 110
 
+    test_df['stop'] = '25th St'
+    inst.get_otp(date(2022, 1, 1), date(2022, 1, 1))
+    with Session(bind=inst.engine, future=True) as session:
+        ret = session.query(CirculatorArrival)
+        assert ret.count() == 110
+
+    assert ['25th St' for _ in range(10)] != [r.stop for r in session.query(CirculatorRidership).all()[100:110]]
+
+
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
 @patch('transitstat.circulator.reports.RideSystemsInterface')
-def test_get_otp_force(mocked_rs_cls, conn_str):
+def test_get_otp_force(mocked_rs_cls, conn_str, arrival_factory, arrival_dataset):
     """Test for get_otp"""
-    test_df = {
-        'date': [date(2021, 5, 1), date(2021, 5, 2), date(2021, 5, 3), date(2021, 5, 4)],
-        'route': ['xx', 'xx', 'xx', 'xx'],
-        'stop': ['xx', 'xx', 'xx', 'xx'],
-        'blockid': ['xx', 'xx', 'xx', 'xx'],
-        'actualarrivaltime': [time(), time(), time(), time()],
-        'actualdeparturetime': [time(), time(), time(), time()],
-        'scheduledarrivaltime': [time(), time(), time(), time()],
-        'scheduleddeparturetime': [time(), time(), time(), time()],
-        'vehicle': ['1', '2', '3', '4'],
-        'ontimestatus': ['xx', 'xx', 'xx', 'xx']
-        }
+    test_df = pd.DataFrame(data=arrival_dataset.create_batch(10))
 
-    inst = RidesystemReports(conn_str)
-    inst.rs_cls._login.return_value = "Login successful :)"
-    inst.rs_cls.get_otp.return_value = pd.DataFrame(test_df)
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    inst.rs_cls.get_otp.return_value = test_df
 
-    inst.get_otp(date(2021, 5, 1), date(2021, 5, 1), force=True, hours='12')
+    with Session(bind=inst.engine, future=True) as session:
+        batch = arrival_factory.create_batch(100)
+        session.bulk_save_objects(batch)
+        session.commit()
+
+    inst.get_otp(date(2022, 1, 1), date(2022, 1, 1), force=True, hours='12')
+    assert mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword') is None
+    assert inst.rs_cls.get_otp.assert_called_once_with(date(2022, 1, 1), date(2022, 1, 1), hours='12') is None  # pylint: disable=no-member
+
     with Session(bind=inst.engine, future=True) as session:
         ret = session.query(CirculatorArrival)
-        assert ret.count() == 4
+        assert ret.count() == 110
 
+    test_df['stop'] = '25th St'
+    inst.get_otp(date(2022, 1, 1), date(2022, 1, 1), force=True, hours='12')
+    with Session(bind=inst.engine, future=True) as session:
+        ret = session.query(CirculatorArrival)
+        assert ret.count() == 110
+
+    assert ['25th St' for _ in range(10)] != [r.stop for r in session.query(CirculatorRidership).all()[100:110]]
+
+
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
 @patch('transitstat.circulator.reports.RideSystemsInterface')
-def test_get_vehicle_assignments_no_force(mocked_rs_cls, conn_str):
+def test_get_vehicle_assignments_no_force(mocked_rs_cls, conn_str, runtime_factory, runtime_dataset):
     """Test get_vehicle_assignments"""
-    test_df = {
-        'vehicle': ['1', '2', '3'],
-        'route':['xx', 'xx', 'xx'],
-        'start_time': [datetime(2022, 1, 1, 12, 0), datetime(2022, 1, 1, 12, 15), datetime(2022, 1, 1, 12, 30)],
-        'end_time': [datetime(2022, 1, 1, 12, 0), datetime(2022, 1, 1, 12, 15), datetime(2022, 1, 1, 12, 30)]
-        }
+    test_df = pd.DataFrame(data=runtime_dataset.create_batch(10))
 
-    inst = RidesystemReports(conn_str)
-    inst.rs_cls._login.return_value = "Login successful :)"
-    inst.rs_cls.get_runtimes.return_value = pd.DataFrame(test_df)
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    inst.rs_cls.get_runtimes.return_value = test_df
 
+    with Session(bind=inst.engine, future=True) as session:
+        batch = runtime_factory.create_batch(100)
+        session.bulk_save_objects(batch)
+        session.commit()
+
+    inst.get_vehicle_assignments(date(2022, 1, 1), date(2022, 1, 1))
+    assert mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword') is None
+    assert inst.rs_cls.get_runtimes.assert_called_once_with(date(2022, 1, 1), date(2022, 1, 1)) is None  # pylint: disable=no-member
+
+    with Session(bind=inst.engine, future=True) as session:
+        ret = session.query(CirculatorBusRuntimes)
+        assert ret.count() == 110
+
+    test_df['route'] = 'blue'
     inst.get_vehicle_assignments(date(2022, 1, 1), date(2022, 1, 1))
     with Session(bind=inst.engine, future=True) as session:
         ret = session.query(CirculatorBusRuntimes)
-        assert ret.count() == 7
+        assert ret.count() == 110
 
+    assert ['blue' for _ in range(10)] != [r.route for r in session.query(CirculatorRidership).all()[100:110]]
+
+
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
 @patch('transitstat.circulator.reports.RideSystemsInterface')
-def test_get_vehicle_assignments_force(mocked_rs_cls, conn_str):
+def test_get_vehicle_assignments_force(mocked_rs_cls, conn_str, runtime_factory, runtime_dataset):
     """Test get_vehicle_assignments with the force option on existing data"""
-    test_df = {
-        'vehicle': ['Purple', 'Purple', 'Purple'],
-        'route':['xx', 'xx', 'xx'],
-        'start_time': [datetime(2021, 5, 1, 12, 0), datetime(2021, 5, 2, 12, 0), datetime(2021, 5, 3, 12, 0)],
-        'end_time': [datetime(2022, 1, 1, 12, 0), datetime(2022, 1, 1, 12, 15), datetime(2022, 1, 1, 12, 30)]
-        }
+    test_df = pd.DataFrame(data=runtime_dataset.create_batch(10))
 
-    inst = RidesystemReports(conn_str)
-    inst.rs_cls._login.return_value = "Login successful :)"
-    inst.rs_cls.get_runtimes.return_value = pd.DataFrame(test_df)
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    inst.rs_cls.get_runtimes.return_value = test_df
 
+    with Session(bind=inst.engine, future=True) as session:
+        batch = runtime_factory.create_batch(100)
+        session.bulk_save_objects(batch)
+        session.commit()
+
+    inst.get_vehicle_assignments(date(2022, 1, 1), date(2022, 1, 1), force=True)
+    assert mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword') is None
+    assert inst.rs_cls.get_runtimes.assert_called_once_with(date(2022, 1, 1), date(2022, 1, 1)) is None  # pylint: disable=no-member
+
+    with Session(bind=inst.engine, future=True) as session:
+        ret = session.query(CirculatorBusRuntimes)
+        assert ret.count() == 110
+
+    test_df['route'] = 'blue'
     inst.get_vehicle_assignments(date(2022, 1, 1), date(2022, 1, 1), force=True)
     with Session(bind=inst.engine, future=True) as session:
         ret = session.query(CirculatorBusRuntimes)
-        assert ret.count() == 4
+        assert ret.count() == 110
 
+    assert ['blue' for _ in range(10)] == [r.route for r in session.query(CirculatorBusRuntimes).all()[100:110]]
+
+
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
 @patch('transitstat.circulator.reports.RideSystemsInterface')
-def test_get_ridership_no_force(mocked_rs_cls, conn_str):
+def test_get_ridership_no_force(mocked_rs_cls, conn_str, ridership_factory, ridership_dataset):
     """Test get_ridership"""
-    test_df = {
-        'vehicle': ['Tesla Model S', 'bike', 'legs'],
-        'route': ['Purple', 'Purple', 'Purple'],
-        'stop': ["Webster's house", 'Brian St', 'Quilvio is cool'],
-        'latitude': [123.456789, 123.456789, 123.456789],
-        'longitude': [123.456789, 123.456789, 123.456789],
-        'datetime': [datetime(2022, 1, 1, 12, 0), datetime(2022, 1, 1, 12, 15), datetime(2022, 1, 1, 12, 30)],
-        'entries': [0, 3, 1],
-        'exits': [100, 0, 0],
-        }
+    test_df = pd.DataFrame(data=ridership_dataset.create_batch(10))
 
-    inst = RidesystemReports(conn_str)
-    inst.rs_cls._login.return_value = "Login successful :)"
-    inst.rs_cls.get_ridership.return_value = pd.DataFrame(test_df)
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    inst.rs_cls.get_ridership.return_value = test_df
 
+    with Session(bind=inst.engine, future=True) as session:
+        batch = ridership_factory.create_batch(100)
+        session.bulk_save_objects(batch)
+        session.commit()
+
+    inst.get_ridership(date(2022, 1, 1), date(2022, 1, 1))
+    assert mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword') is None
+    assert inst.rs_cls.get_ridership.assert_called_once_with(date(2022, 1, 1), date(2022, 1, 1)) is None  # pylint: disable=no-member
+
+    with Session(bind=inst.engine, future=True) as session:
+        ret = session.query(CirculatorRidership)
+        assert ret.count() == 110
+
+    test_df['entries'] = 1
     inst.get_ridership(date(2022, 1, 1), date(2022, 1, 1))
     with Session(bind=inst.engine, future=True) as session:
         ret = session.query(CirculatorRidership)
-        assert ret.count() == 7
+        assert ret.count() == 110
 
+    assert [1 for _ in range(10)] != [r.boardings for r in session.query(CirculatorRidership).all()[100:110]]
+
+
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
 @patch('transitstat.circulator.reports.RideSystemsInterface')
-def test_get_ridership_force(mocked_rs_cls, conn_str):
+def test_get_ridership_force(mocked_rs_cls, conn_str, ridership_factory, ridership_dataset):
     """Test get_ridership"""
-    test_df = {
-        'vehicle': ['xx1', 'xx2', 'xx3'],
-        'route': ['xx1', 'xx2', 'xx3'],
-        'stop': ['xx1', 'xx2', 'xx3'],
-        'latitude': [987.654321, 987.654321, 987.654321],
-        'longitude': [987.654321, 987.654321, 987.654321],
-        'datetime': [datetime(2021, 5, 1, 12, 0), datetime(2021, 5, 2, 12, 0), datetime(2021, 5, 3, 12, 0)],
-        'entries': [0, 3, 1],
-        'exits': [100, 0, 0],
-        }
+    test_df = pd.DataFrame(data=ridership_dataset.create_batch(10))
 
-    inst = RidesystemReports(conn_str)
-    inst.rs_cls._login.return_value = "Login successful :)"
-    inst.rs_cls.get_ridership.return_value = pd.DataFrame(test_df)
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    inst.rs_cls.get_ridership.return_value = test_df
 
+    with Session(bind=inst.engine, future=True) as session:
+        batch = ridership_factory.create_batch(100)
+        session.bulk_save_objects(batch)
+        session.commit()
+
+    inst.get_ridership(date(2022, 1, 1), date(2022, 1, 1), force=True)
+    assert mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword') is None
+    assert inst.rs_cls.get_ridership.assert_called_once_with(date(2022, 1, 1), date(2022, 1, 1)) is None  # pylint: disable=no-member
+
+    with Session(bind=inst.engine, future=True) as session:
+        ret = session.query(CirculatorRidership)
+        assert ret.count() == 110
+
+    test_df['entries'] = 1
     inst.get_ridership(date(2022, 1, 1), date(2022, 1, 1), force=True)
     with Session(bind=inst.engine, future=True) as session:
         ret = session.query(CirculatorRidership)
-        assert ret.count() == 4
+        assert ret.count() == 110
+
+    assert [1 for _ in range(10)] == [r.boardings for r in session.query(CirculatorRidership).all()[100:110]]
 
 
-
-def test_get_dates_to_process(ridesystems_reports):
+@patch('transitstat.circulator.reports.RideSystemsInterface')
+def test_get_dates_to_process(mocked_rs_cls, conn_str, arrival_factory, runtime_factory):
     """Test get_dates_to_process"""
 
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    assert mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword') is None
+
+    with Session(bind=inst.engine, future=True) as session:
+        batch = arrival_factory.create_batch(100)
+        session.bulk_save_objects(batch)
+        session.commit()
+
+    with Session(bind=inst.engine, future=True) as session:
+        batch = runtime_factory.create_batch(100)
+        session.bulk_save_objects(batch)
+        session.commit()
+
     # Test with datetime
-    dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
-                                                    CirculatorBusRuntimes.starttime, force=False)
+    dates = inst.get_dates_to_process(date(2022, 1, 2), date(2022, 1, 2),
+                                      CirculatorBusRuntimes.starttime, force=False)
     assert len(dates) == 0
 
-    dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
-                                                    CirculatorBusRuntimes.starttime, force=True)
-    assert len(dates) == 4
+    dates = inst.get_dates_to_process(date(2022, 1, 2), date(2022, 1, 2),
+                                      CirculatorBusRuntimes.starttime, force=True)
+    assert len(dates) == 1
 
     # Test with date
-    dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
-                                                    CirculatorArrival.date, force=False)
+    dates = inst.get_dates_to_process(date.today(), date.today(),
+                                      CirculatorArrival.date, force=False)
     assert len(dates) == 0
 
-    dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
-                                                    CirculatorArrival.date, force=True)
-    assert len(dates) == 4
+    dates = inst.get_dates_to_process(date.today(), date.today(),
+                                      CirculatorArrival.date, force=True)
+    assert len(dates) == 1
 
 
 def test_parse_args():

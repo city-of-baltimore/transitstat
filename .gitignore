@@ -184,3 +184,6 @@ dmypy.json
 # virtual environments
 venv*/
 /.venv-transitstat/
+
+#cred file
+/src/transitstat/circulator/creds.py
