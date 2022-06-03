@@ -15,7 +15,7 @@ def test_parse_sheets(tmp_path_factory, connector_import):
     exp_vals = {date(2022, 3, 2): 69, date(2022, 3, 3): 55, date(2022, 3, 4): 34}
 
     tmp_path = tmp_path_factory.mktemp('data')
-    shutil.copy(Path(__file__).parent / 'data' / 'HC2 03-2022.xlsx', tmp_path)
+    shutil.copy(Path(__file__).parent / 'data' / 'HC2 03.2022.xlsx', tmp_path)
     sheets = connector_import.parse_sheets(tmp_path)
     assert len(sheets.keys()) == 1  # should only have route 2
     assert len(sheets[2].keys()) == 3  # three dates

@@ -45,7 +45,7 @@ class ConnectorImport:
         """
         logger.info('Processing {}', path)
         ret: ParsedDataDict = defaultdict(dict)
-        file_list = path.glob('HC* *-*.xlsx') if path.exists() else [path]
+        file_list = path.glob('HC* *.*.xlsx') if path.exists() else [path]
 
         for hc_file in file_list:
             parsed = self._parse_sheets(hc_file)
@@ -67,7 +67,7 @@ class ConnectorImport:
                 return 0
             return val
 
-        filename_parse = re.search(r'HC(\d*) \d{1,2}-\d{4}.xlsx', str(filename))
+        filename_parse = re.search(r'HC(\d*) \d{1,2}.\d{4}.xlsx', str(filename))
         if not filename_parse:
             return None
 
@@ -75,8 +75,7 @@ class ConnectorImport:
         sheets_dict = pd.read_excel(filename, sheet_name=None,
                                     converters={'Count': _count_converter, 'Boardings': _count_converter},
                                     dtype={'Date': str,
-                                           'Depart Location': str,
-                                           'Boardings': int})
+                                           'Depart Location': str})
         ridership: RidershipDict = {}
 
         for _, sheet in sheets_dict.items():
