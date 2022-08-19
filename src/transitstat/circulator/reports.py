@@ -6,7 +6,7 @@ from typing import Optional, Union
 import pandas as pd  # type: ignore
 import sqlalchemy.orm  # type: ignore
 from loguru import logger
-from ridesystems.reports import Reports
+from ridesystems.reports import Reports as RideSystemsInterface
 from sqlalchemy import create_engine  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
@@ -29,7 +29,7 @@ class RidesystemReports:
             rs_user = RIDESYSTEMS_USERNAME
         if rs_pass is None:
             rs_pass = RIDESYSTEMS_PASSWORD
-        self.rs_cls = Reports(rs_user, rs_pass)
+        self.rs_cls = RideSystemsInterface(rs_user, rs_pass)
 
         self.engine = create_engine(conn_str, echo=True, future=True)
         with self.engine.begin() as connection:

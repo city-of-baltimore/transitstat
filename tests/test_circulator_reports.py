@@ -1,104 +1,132 @@
 """Test suites for circulator.circulator_reports"""
-from datetime import date
+from datetime import date, timedelta
+from unittest.mock import patch
 
+import pytest
+import pandas as pd  # type: ignore
 from sqlalchemy.orm import Session  # type: ignore
 
 from transitstat.circulator.schema import CirculatorArrival, CirculatorBusRuntimes, CirculatorRidership
-from transitstat.circulator.reports import parse_args
+from transitstat.circulator.reports import parse_args, RidesystemReports
 
 
-def test_get_otp(ridesystems_reports):
+def body_testing(mocked_rs_cls, conn_str: str, func, factory, force: bool = False):
+    """Repeated code chunk to use for the different tests"""
+    test_df = pd.DataFrame(data=factory.create_batch(100))
+
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    date_start = date.today() - timedelta(days=2)
+    date_end = date.today()
+
+    if func == 'otp':
+        inst.rs_cls.get_otp.return_value = test_df  # type: ignore
+        model = CirculatorArrival
+        date_column = model.date
+
+        inst.get_otp(date_start, date_end, force=force, hours='12')
+    elif func == 'runtime':
+        inst.rs_cls.get_runtimes.return_value = test_df  # type: ignore
+        model = CirculatorBusRuntimes
+        date_column = model.starttime
+
+        inst.get_vehicle_assignments(date_start, date_end, force=force)
+    elif func == 'ridership':
+        inst.rs_cls.get_ridership.return_value = test_df  # type: ignore
+        model = CirculatorRidership
+        date_column = model.datetime
+
+        inst.get_ridership(date_start, date_end, force=force)
+    else:
+        assert False
+
+    mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword')
+
+    with Session(bind=inst.engine, future=True) as session:
+        ret = session.query(model)
+        assert ret.count() == 100
+
+    if force:
+        assert len(inst.get_dates_to_process(date_start, date_end, date_column, force)) == 3
+    else:
+        assert len(inst.get_dates_to_process(date_start, date_end, date_column, force)) == 0
+
+
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
+@patch('transitstat.circulator.reports.RideSystemsInterface')
+def test_get_otp_no_force(mocked_rs_cls, conn_str: str, arrival_dataset):
+    """Test for get_otp without force"""
+
+    body_testing(mocked_rs_cls, conn_str, 'otp', arrival_dataset, force=False)
+
+
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
+@patch('transitstat.circulator.reports.RideSystemsInterface')
+def test_get_otp_force(mocked_rs_cls, conn_str: str, arrival_dataset):
     """Test for get_otp"""
-    ridesystems_reports.get_otp(date(2021, 6, 1), date(2021, 6, 1), hours='12')
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorArrival)
-        assert ret.count() > 100
+    body_testing(mocked_rs_cls, conn_str, 'otp', arrival_dataset, force=True)
 
 
-def test_get_otp_force(ridesystems_reports):
-    """Test for get_otp with the force option on existing data"""
-    ridesystems_reports.get_otp(date(2021, 5, 1), date(2021, 5, 1), force=True, hours='12')
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorArrival)
-        assert ret.count() > 100
-
-
-def test_get_otp_no_force(ridesystems_reports):
-    """Test for get_otp disabling the force option on existing data"""
-    ridesystems_reports.get_otp(date(2021, 5, 1), date(2021, 5, 1), force=False)
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorArrival)
-        assert ret.count() == 4
-
-
-def test_get_vehicle_assignments(ridesystems_reports):
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
+@patch('transitstat.circulator.reports.RideSystemsInterface')
+def test_get_vehicle_assignments_no_force(mocked_rs_cls, conn_str: str, runtime_dataset):
     """Test get_vehicle_assignments"""
-    ridesystems_reports.get_vehicle_assignments(date(2021, 6, 1), date(2021, 6, 1))
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorBusRuntimes)
-        assert ret.count() == 19
+    body_testing(mocked_rs_cls, conn_str, 'runtime', runtime_dataset, force=False)
 
 
-def test_get_vehicle_assignments_force(ridesystems_reports):
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
+@patch('transitstat.circulator.reports.RideSystemsInterface')
+def test_get_vehicle_assignments_force(mocked_rs_cls, conn_str, runtime_dataset):
     """Test get_vehicle_assignments with the force option on existing data"""
-    ridesystems_reports.get_vehicle_assignments(date(2021, 5, 1), date(2021, 5, 1), force=True)
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorBusRuntimes)
-        assert ret.count() > 100
+    body_testing(mocked_rs_cls, conn_str, 'runtime', runtime_dataset, force=True)
 
 
-def test_get_vehicle_assignments_no_force(ridesystems_reports):
-    """get_vehicle_assignments disabling the force option on existing data"""
-    ridesystems_reports.get_vehicle_assignments(date(2021, 5, 1), date(2021, 5, 1), force=False)
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorBusRuntimes)
-        assert ret.count() == 4
-
-
-def test_get_ridership(ridesystems_reports):
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
+@patch('transitstat.circulator.reports.RideSystemsInterface')
+def test_get_ridership_no_force(mocked_rs_cls, conn_str, ridership_dataset):
     """Test get_ridership"""
-    ridesystems_reports.get_ridership(date(2021, 6, 1), date(2021, 6, 1))
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorRidership)
-        assert ret.count() > 1000
+    body_testing(mocked_rs_cls, conn_str, 'ridership', ridership_dataset, force=False)
 
 
-def test_get_ridership_force(ridesystems_reports):
+@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
+@patch('transitstat.circulator.reports.RideSystemsInterface')
+def test_get_ridership_force(mocked_rs_cls, conn_str, ridership_dataset):
     """Test get_ridership"""
-    ridesystems_reports.get_ridership(date(2021, 5, 1), date(2021, 5, 1), force=True)
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorRidership)
-        assert ret.count() > 1000
+    body_testing(mocked_rs_cls, conn_str, 'ridership', ridership_dataset, force=True)
 
 
-def test_get_ridership_no_force(ridesystems_reports):
-    """Test get_ridership"""
-    ridesystems_reports.get_ridership(date(2021, 5, 1), date(2021, 5, 1), force=False)
-    with Session(bind=ridesystems_reports.engine, future=True) as session:
-        ret = session.query(CirculatorRidership)
-        assert ret.count() == 4
-
-
-def test_get_dates_to_process(ridesystems_reports):
+@patch('transitstat.circulator.reports.RideSystemsInterface')
+def test_get_dates_to_process(mocked_rs_cls, conn_str, arrival_dataset, runtime_dataset):
     """Test get_dates_to_process"""
+    arrival_df = pd.DataFrame(data=arrival_dataset.create_batch(100))
+    runtime_df = pd.DataFrame(data=runtime_dataset.create_batch(100))
 
+    inst = RidesystemReports(conn_str, 'username', 'superdupersecretpassword')
+    inst.rs_cls.get_otp.return_value = arrival_df
+    inst.rs_cls.get_runtimes.return_value = runtime_df
+    assert mocked_rs_cls.assert_called_once_with('username', 'superdupersecretpassword') is None
+
+    date_start = date.today() - timedelta(days=2)
+    date_end = date.today()
+
+    inst.get_otp(date_start, date_end, hours='12')
+    inst.get_vehicle_assignments(date_start, date_end)
     # Test with datetime
-    dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
-                                                     CirculatorBusRuntimes.starttime, force=False)
+    dates = inst.get_dates_to_process(date_start, date_end,
+                                      CirculatorBusRuntimes.starttime, force=False)
     assert len(dates) == 0
 
-    dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
-                                                     CirculatorBusRuntimes.starttime, force=True)
-    assert len(dates) == 4
+    dates = inst.get_dates_to_process(date_start, date_end,
+                                      CirculatorBusRuntimes.starttime, force=True)
+    assert len(dates) == 3
 
     # Test with date
-    dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
-                                                     CirculatorArrival.date, force=False)
+    dates = inst.get_dates_to_process(date_start, date_end,
+                                      CirculatorArrival.date, force=False)
     assert len(dates) == 0
 
-    dates = ridesystems_reports.get_dates_to_process(date(2021, 5, 1), date(2021, 5, 4),
-                                                     CirculatorArrival.date, force=True)
-    assert len(dates) == 4
+    dates = inst.get_dates_to_process(date_start, date_end,
+                                      CirculatorArrival.date, force=True)
+    assert len(dates) == 3
 
 
 def test_parse_args():

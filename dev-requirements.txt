@@ -8,5 +8,6 @@ pytest
 pytest-cov
 setuptools
 typing
+factory-boy
 
 types-python-dateutil
