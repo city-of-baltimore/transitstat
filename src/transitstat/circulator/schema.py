@@ -56,3 +56,16 @@ class CirculatorRidership(Base):
     datetime = Column(DateTime, primary_key=True)
     boardings = Column(Integer)
     alightings = Column(Integer)
+
+
+class CirculatorOperator(Base):
+    """Table holding information about which operators are operating each bus"""
+    __tablename__ = 'ccc_operators'
+
+    Bus = Column(String(length=10), primary_key=True)
+    Vehicle = Column(String(length=10))
+    Route = Column(String(length=15))
+    Block = Column(String(length=15), primary_key=True)
+    Operator = Column(String(length=50), primary_key=True)
+    Date = Column(Date, primary_key=True)
+    Time_of_day = Column(String(length=2), primary_key=True)

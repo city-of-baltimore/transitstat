@@ -1,5 +1,6 @@
 [GENERAL]
 extension-pkg-whitelist=pyodbc
+good-names=df,i
 
 [FORMAT]
 max-line-length=120
