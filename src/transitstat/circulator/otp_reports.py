@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pandas as pd  # type: ignore
 from sqlalchemy import create_engine  # type: ignore
-from sqlalchemy.orm import Session  # type: ignore
 
 from transitstat.args import setup_logging, setup_parser
 from .schema import Base
